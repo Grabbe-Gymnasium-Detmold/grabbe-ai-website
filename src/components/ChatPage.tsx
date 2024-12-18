@@ -1,8 +1,8 @@
-import React, {useState, useRef, useEffect} from "react";
+import React, { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
-import {Input} from "./ui/input";
-import {Button} from "./ui/button";
-import {Card, CardContent, CardHeader, CardTitle} from "./ui/card";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
 const API_URL = "https://api.ai.grabbe.site/chat";
 const AUTH_URL = "https://api.ai.grabbe.site/auth";
@@ -20,19 +20,17 @@ const ChatPage: React.FC = () => {
             try {
                 const authResponse = await fetch(AUTH_URL, {
                     method: "GET",
-                    headers: {"Content-Type": "application/json"},
+                    headers: { "Content-Type": "application/json" },
                 });
 
                 if (!authResponse.ok) {
-                    console.error("Fehler bei der Authentifizierung.");
+                    console.error("Authentication failed.");
                     return;
                 }
 
                 const authData = await authResponse.json();
                 localStorage.setItem("session_token", authData.token);
                 setToken(authData.token);
-
-                console.log("Authentifizierung erfolgreich.");
 
                 const threadResponse = await fetch(THREAD_URL, {
                     method: "POST",
@@ -43,15 +41,14 @@ const ChatPage: React.FC = () => {
                 });
 
                 if (!threadResponse.ok) {
-                    console.error("Fehler beim Erstellen des Threads.");
+                    console.error("Thread creation failed.");
                     return;
                 }
 
                 const threadData = await threadResponse.json();
                 setThreadId(threadData.threadId);
-                console.log("Thread erstellt mit ID:", threadData.threadId);
             } catch (error) {
-                console.error("Fehler beim Authentifizieren oder Erstellen des Threads:", error);
+                console.error("Error during authentication or thread creation:", error);
             }
         }
 
@@ -60,8 +57,6 @@ const ChatPage: React.FC = () => {
             authenticateAndCreateThread();
         } else {
             setToken(storedToken);
-
-            // Attempt to create thread if token exists but no thread ID is stored
             if (!threadId) {
                 (async () => {
                     try {
@@ -76,12 +71,11 @@ const ChatPage: React.FC = () => {
                         if (threadResponse.ok) {
                             const threadData = await threadResponse.json();
                             setThreadId(threadData.threadId);
-                            console.log("Thread erstellt mit ID:", threadData.threadId);
                         } else {
-                            console.error("Fehler beim Erstellen des Threads mit gespeichertem Token.");
+                            console.error("Thread creation failed with stored token.");
                         }
                     } catch (error) {
-                        console.error("Fehler beim Erstellen des Threads:", error);
+                        console.error("Error creating thread:", error);
                     }
                 })();
             }
@@ -102,18 +96,14 @@ const ChatPage: React.FC = () => {
         setIsBotResponding(true);
 
         const botMessageId = Date.now() + 1;
-
-        setMessages((prev) => [
-            ...prev,
-            {id: botMessageId, text: "", user: "Bot" as const},
-        ]);
+        setMessages((prev) => [...prev, { id: botMessageId, text: "", user: "Bot" as const }]);
 
         try {
             const response = await fetch(API_URL, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Accept": "text/event-stream",
+                    Accept: "text/event-stream",
                     Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
@@ -125,7 +115,7 @@ const ChatPage: React.FC = () => {
             if (!response.ok) {
                 setMessages((prev) => [
                     ...prev,
-                    {id: Date.now(), text: "Fehler beim Abrufen der Antwort.", user: "Bot" as const},
+                    { id: Date.now(), text: "Error retrieving response.", user: "Bot" as const },
                 ]);
                 setIsBotResponding(false);
                 return;
@@ -136,71 +126,65 @@ const ChatPage: React.FC = () => {
             let done = false;
 
             while (!done) {
-                const {value, done: readerDone} = await reader?.read()!;
+                const { value, done: readerDone } = await reader?.read()!;
                 done = readerDone;
 
-                const chunk = decoder.decode(value, {stream: true});
-
+                const chunk = decoder.decode(value, { stream: true });
                 setMessages((prev) =>
                     prev.map((msg) =>
-                        msg.id === botMessageId
-                            ? {...msg, text: msg.text + chunk}
-                            : msg
+                        msg.id === botMessageId ? { ...msg, text: msg.text + chunk } : msg
                     )
                 );
             }
         } catch (error: unknown) {
-            if (error instanceof Error) {
-                setMessages((prev) => [
-                    ...prev,
-                    {id: Date.now(), text: `Fehler: ${error.message}`, user: "Bot" as const},
-                ]);
-            } else {
-                setMessages((prev) => [
-                    ...prev,
-                    {id: Date.now(), text: "Unbekannter Fehler", user: "Bot" as const},
-                ]);
-            }
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: Date.now(),
+                    text: error instanceof Error ? `Error: ${error.message}` : "Unknown error",
+                    user: "Bot" as const,
+                },
+            ]);
         } finally {
             setIsBotResponding(false);
         }
     };
 
     return (
-        <div className="flex flex-col h-screen bg-background">
-            <Card className="flex flex-col h-full mx-auto w-full max-w-2xl shadow-md">
-                <CardHeader className="py-4 border-b">
-                    <CardTitle className="text-center text-lg font-semibold">Grabbe-AI Chat</CardTitle>
+        <div className="flex flex-col h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
+            <Card className="flex flex-col h-full mx-auto w-full max-w-2xl shadow-xl rounded-lg border border-gray-700 bg-gray-900">
+                <CardHeader className="py-4 border-b bg-gray-800 text-white rounded-t-lg">
+                    <CardTitle className="text-center text-lg font-bold">Grabbe-AI Chat</CardTitle>
                 </CardHeader>
 
                 <CardContent className="flex-1 overflow-y-auto p-6 space-y-4">
                     {messages.map((msg) => (
                         <div
                             key={msg.id}
-                            className={`p-4 rounded-lg max-w-xs text-sm shadow ${
+                            className={`p-4 rounded-lg max-w-xs text-sm shadow-md transition-transform transform-gpu hover:scale-105 ${
                                 msg.user === "You"
-                                    ? "bg-primary text-primary-foreground self-end"
-                                    : "bg-secondary text-secondary-foreground self-start"
+                                    ? "bg-blue-600 text-white self-end"
+                                    : "bg-gray-700 text-gray-200 self-start"
                             }`}
                         >
-                            {msg.user === "Bot" ? (
-                                <ReactMarkdown>{msg.text}</ReactMarkdown>
-                            ) : (
-                                msg.text
-                            )}
+                            {msg.user === "Bot" ? <ReactMarkdown>{msg.text}</ReactMarkdown> : msg.text}
                         </div>
                     ))}
                 </CardContent>
 
-                <CardContent className="p-4 flex items-center gap-4 border-t">
+                <CardContent className="p-4 flex items-center gap-4 border-t bg-gray-800 rounded-b-lg">
                     <Input
                         ref={inputRef}
                         placeholder="Type your message..."
-                        className="flex-1"
+                        className="flex-1 rounded-full bg-gray-700 text-white border-gray-600 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                         onKeyDown={(e) => e.key === "Enter" && handleSend()}
                         disabled={isBotResponding}
                     />
-                    <Button onClick={handleSend} className="h-10" disabled={isBotResponding || !token || !threadId}>
+                    <Button
+                        onClick={handleSend}
+                        className="h-10 px-6 bg-blue-500 text-white rounded-full shadow-md hover:bg-blue-600 disabled:bg-gray-400"
+                        disabled={isBotResponding || !token || !threadId}
+                    >
                         Send
                     </Button>
                 </CardContent>
