@@ -165,7 +165,7 @@ const ChatPage: React.FC = () => {
     return (
         <div className="flex flex-col h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
             <Card className="flex flex-col h-full mx-auto w-full max-w-2xl shadow-xl  border border-gray-700 bg-gray-900">
-                <CardHeader className="py-4 border-b bg-gray-800 text-white">
+                <CardHeader className="py-4  bg-gray-800 text-white">
                     <CardTitle className="text-center text-lg font-bold">Grabbe-AI Chat</CardTitle>
                 </CardHeader>
 
@@ -173,7 +173,7 @@ const ChatPage: React.FC = () => {
                     {messages.map((msg) => (
                         <div
                             key={msg.id}
-                            className={`p-4 w-full text-sm shadow-md transition-transform transform-gpu hover:scale-105 ${
+                            className={`p-4 w-full text-sm rounded-lg shadow-md transition-transform transform-gpu hover:scale-105 ${
                                 msg.user === "You"
                                     ? "bg-blue-600 text-white self-end"
                                     : "bg-gray-700 text-gray-200 self-start"
@@ -189,7 +189,7 @@ const ChatPage: React.FC = () => {
                     ))}
                 </CardContent>
 
-                <CardContent className="p-4 flex items-center gap-4 border-t bg-gray-800 ">
+                <CardContent className="p-4 flex items-center gap-4  bg-gray-800 ">
                     <Input
                         ref={inputRef}
                         placeholder="Type your message..."
