@@ -192,7 +192,7 @@ const ChatPage: React.FC = () => {
                 <CardContent className="p-4 flex items-center gap-4  bg-gray-800 ">
                     <Input
                         ref={inputRef}
-                        placeholder="Type your message..."
+                        placeholder="Schreibe eine Nachricht..."
                         className="flex-1 rounded-full bg-gray-700 text-white border-gray-600 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                         onKeyDown={(e) => e.key === "Enter" && handleSend()}
                         disabled={isBotResponding}
@@ -202,7 +202,7 @@ const ChatPage: React.FC = () => {
                         className="h-10 px-6 bg-blue-500 text-white rounded-full shadow-md hover:bg-blue-600 disabled:bg-gray-400"
                         disabled={isBotResponding || !token || !threadId}
                     >
-                        Send
+                        Senden
                     </Button>
                 </CardContent>
             </Card>
