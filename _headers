@@ -1,2 +1,2 @@
 /*
-  Content-Security-Policy: frame-ancestors http://grabbe-gymnasium.de;
+   X-Frame-Options "ALLOWALL";
