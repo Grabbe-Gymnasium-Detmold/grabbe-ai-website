@@ -55,6 +55,13 @@ const ChatPage: React.FC = () => {
         inputRef.current.value = "";
         setIsBotResponding(true);
 
+        const botMessageId = Date.now() + 1; // ID für die Bot-Nachricht
+
+        setMessages((prev) => [
+            ...prev,
+            { id: botMessageId, text: "", user: "Bot" as const }, // Leere Nachricht für den Bot
+        ]);
+
         try {
             const response = await fetch(API_URL, {
                 method: "POST",
@@ -78,22 +85,21 @@ const ChatPage: React.FC = () => {
             const reader = response.body?.getReader();
             const decoder = new TextDecoder();
             let done = false;
-            let botResponse = "";
 
             while (!done) {
                 const { value, done: readerDone } = await reader?.read()!;
                 done = readerDone;
-                botResponse += decoder.decode(value, { stream: true });
 
-                setMessages((prev) => {
-                    const updatedMessages = [...prev];
-                    if (updatedMessages.some((msg) => msg.user === "Bot" && msg.id === userMessage.id + 1)) {
-                        updatedMessages[updatedMessages.length - 1].text = botResponse;
-                    } else {
-                        updatedMessages.push({ id: userMessage.id + 1, text: botResponse, user: "Bot" as const });
-                    }
-                    return updatedMessages;
-                });
+                const chunk = decoder.decode(value, { stream: true });
+
+                // Aktualisiere die Bot-Nachricht live
+                setMessages((prev) =>
+                    prev.map((msg) =>
+                        msg.id === botMessageId
+                            ? { ...msg, text: msg.text + chunk } // Append Chunk
+                            : msg
+                    )
+                );
             }
         } catch (error: unknown) {
             if (error instanceof Error) {
