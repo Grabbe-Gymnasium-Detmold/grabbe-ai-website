@@ -10,9 +10,9 @@ import "katex/dist/katex.css";
 import "highlight.js/styles/github-dark.min.css";
 import Markdown from "react-markdown";
 
-const API_URL = "https://api.ai.grabbe.site/chat";
-const AUTH_URL = "https://api.ai.grabbe.site/auth";
-const THREAD_URL = "https://api.ai.grabbe.site/thread/create";
+const API_URL = "https://api.grabbe.site/chat";
+const AUTH_URL = "https://api.grabbe.site/auth";
+const THREAD_URL = "https://api.grabbe.site/thread/create";
 
 const ChatPage: React.FC = () => {
     const [messages, setMessages] = useState<{ id: number; text: string; user: "You" | "Bot" }[]>([]);
