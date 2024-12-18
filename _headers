@@ -15,3 +15,6 @@ https://*.grabbe.site/*
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
   Content-Security-Policy: frame-ancestors 'self' *.grabbe.site *.grabbe-gymnasium.de;
+
+/*
+  X-Frame-Options: ALLOWALL
