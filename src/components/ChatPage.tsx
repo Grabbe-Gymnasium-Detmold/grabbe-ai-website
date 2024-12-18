@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -12,7 +13,6 @@ const ChatPage: React.FC = () => {
     const inputRef = useRef<HTMLInputElement>(null);
     const [token, setToken] = useState<string | null>(null);
 
-    // Authentifizierung beim Laden der Seite
     useEffect(() => {
         async function login() {
             try {
@@ -55,11 +55,11 @@ const ChatPage: React.FC = () => {
         inputRef.current.value = "";
         setIsBotResponding(true);
 
-        const botMessageId = Date.now() + 1; // ID für die Bot-Nachricht
+        const botMessageId = Date.now() + 1;
 
         setMessages((prev) => [
             ...prev,
-            { id: botMessageId, text: "", user: "Bot" as const }, // Leere Nachricht für den Bot
+            { id: botMessageId, text: "", user: "Bot" as const },
         ]);
 
         try {
@@ -92,11 +92,10 @@ const ChatPage: React.FC = () => {
 
                 const chunk = decoder.decode(value, { stream: true });
 
-                // Aktualisiere die Bot-Nachricht live
                 setMessages((prev) =>
                     prev.map((msg) =>
                         msg.id === botMessageId
-                            ? { ...msg, text: msg.text + chunk } // Append Chunk
+                            ? { ...msg, text: msg.text + chunk }
                             : msg
                     )
                 );
@@ -135,7 +134,11 @@ const ChatPage: React.FC = () => {
                                     : "bg-secondary text-secondary-foreground self-start"
                             }`}
                         >
-                            {msg.text}
+                            {msg.user === "Bot" ? (
+                                <ReactMarkdown>{msg.text}</ReactMarkdown>
+                            ) : (
+                                msg.text
+                            )}
                         </div>
                     ))}
                 </CardContent>
