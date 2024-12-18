@@ -166,7 +166,7 @@ const ChatPage: React.FC = () => {
         <div className="flex flex-col h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
             <Card className="flex flex-col h-full mx-auto w-full max-w-2xl shadow-xl  border border-gray-700 bg-gray-900">
                 <CardHeader className="py-4  bg-gray-800 text-white">
-                    <CardTitle className="text-center text-lg font-bold">Grabbe-AI Chat</CardTitle>
+                    <CardTitle className="text-center text-lg font-bold">GrabbeAI Chat</CardTitle>
                 </CardHeader>
 
                 <CardContent className="flex-1 overflow-y-auto p-6 space-y-4">
