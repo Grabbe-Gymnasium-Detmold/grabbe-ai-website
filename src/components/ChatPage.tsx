@@ -152,7 +152,7 @@ const ChatPage: React.FC = () => {
                 ...prev,
                 {
                     id: Date.now(),
-                    text: error instanceof Error ? `Error: ${error.message}` : "Unknown error",
+                    text: error instanceof Error ? `Error: ${error.message}` : "Unknown error FEHLER!!!!!",
                     user: "Bot" as const,
                 },
             ]);
