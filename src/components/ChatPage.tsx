@@ -2,79 +2,84 @@ import React, { useState, useEffect, useRef } from "react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { motion } from "framer-motion";
 
-// Define the message type with an optional ID for better identification
-type Message = {
-    id: number;
-    text: string;
-    user: "You" | "Bot";
-};
+const API_URL = "https://api.ai.grabbe.site/chat"; // Deine API URL
 
 const ChatPage: React.FC = () => {
-    const [messages, setMessages] = useState<Message[]>([]);
-    const inputRef = useRef<HTMLInputElement>(null); // Use useRef for the input field
-    const [botAnimatingIndex, setBotAnimatingIndex] = useState<number>(0);
-    const [isBotResponding, setIsBotResponding] = useState<boolean>(false); // Track bot's response status
+    const [messages, setMessages] = useState<{ id: number; text: string; user: "You" | "Bot" }[]>([]);
+    const [isBotResponding, setIsBotResponding] = useState<boolean>(false);
+    const inputRef = useRef<HTMLInputElement>(null);
 
-    // Helper function to send a message
-    const handleSend = (): void => {
-        if (inputRef.current?.value.trim() && !isBotResponding) {
-            const newMessage: Message = {
-                id: Date.now(), // Use timestamp as unique ID
-                text: inputRef.current.value,
-                user: "You",
-            };
+    const handleSend = async (): Promise<void> => {
+        if (!inputRef.current?.value.trim() || isBotResponding) return;
 
-            // Add the user message and simulate bot response
-            setMessages((prevMessages) => {
-                const updatedMessages = [...prevMessages, newMessage];
-                return updatedMessages;
-            });
-            inputRef.current.value = ""; // Clear input after sending message
-            setBotAnimatingIndex(messages.length + 1);
-            setIsBotResponding(true); // Indicate that the bot is responding
+        const userMessage = {
+            id: Date.now(),
+            text: inputRef.current.value.trim(),
+            user: "You",
+        };
 
-            // Simulate bot response after a short delay
-            setTimeout(() => {
-                const botMessage: Message = {
-                    id: Date.now(), // Use a new timestamp for the bot message ID
-                    text: "This is a bot response.",
-                    user: "Bot",
-                };
+        setMessages((prev) => [...prev, userMessage]);
+        inputRef.current.value = ""; // Eingabe leeren
+        setIsBotResponding(true);
 
-                setMessages((prevMessages) => {
-                    const updatedMessages = [...prevMessages, botMessage];
-                    return updatedMessages;
-                });
-                setIsBotResponding(false); // Reset the responding state after bot responds
-            }, 1000);
+        // Bot Antwort als Stream laden
+        const token = localStorage.getItem("session_token");
+        if (!token) {
+            alert("Bitte melden Sie sich an, um fortzufahren.");
+            setIsBotResponding(false);
+            return;
         }
-    };
 
-    // Typing animation for bot messages
-    const TypingText: React.FC<{ text: string; isAnimating: boolean }> = ({ text, isAnimating }) => {
-        const [displayedText, setDisplayedText] = useState<string>("");
+        try {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "text/event-stream",
+                    "Authorization": `Bearer ${token}`,
+                },
+                body: JSON.stringify({ question: userMessage.text }),
+            });
 
-        useEffect(() => {
-            if (!isAnimating) {
-                setDisplayedText(text);
+            if (!response.ok) {
+                setMessages((prev) => [
+                    ...prev,
+                    { id: Date.now(), text: "Fehler beim Abrufen der Antwort.", user: "Bot" },
+                ]);
+                setIsBotResponding(false);
                 return;
             }
 
-            let index = 0;
-            const interval = setInterval(() => {
-                if (index < text.length -1) {
-                    setDisplayedText((prev) => prev + text[index]);
-                    index++;
-                } else {
-                    clearInterval(interval);
-                }
-            }, 50);
-            return () => clearInterval(interval);
-        }, [text, isAnimating]);
+            const reader = response.body?.getReader();
+            const decoder = new TextDecoder();
+            let done = false;
+            let botResponse = "";
 
-        return <span>{displayedText}</span>;
+            while (!done) {
+                const { value, done: readerDone } = await reader?.read()!;
+                done = readerDone;
+                botResponse += decoder.decode(value, { stream: true });
+
+                // Zeige den aktuell gestreamten Text an
+                setMessages((prev) => {
+                    const updatedMessages = [...prev];
+                    if (updatedMessages.some((msg) => msg.user === "Bot" && msg.id === userMessage.id + 1)) {
+                        updatedMessages[updatedMessages.length - 1].text = botResponse;
+                    } else {
+                        updatedMessages.push({ id: userMessage.id + 1, text: botResponse, user: "Bot" });
+                    }
+                    return updatedMessages;
+                });
+            }
+        } catch (error) {
+            setMessages((prev) => [
+                ...prev,
+                { id: Date.now(), text: `Fehler: ${error.message}`, user: "Bot" },
+            ]);
+        } finally {
+            setIsBotResponding(false);
+        }
     };
 
     return (
@@ -87,43 +92,30 @@ const ChatPage: React.FC = () => {
 
                 {/* Chat Content */}
                 <CardContent className="flex-1 overflow-y-auto p-6 space-y-4">
-                    {messages.map((msg, index) => (
-                        <motion.div
-                            key={msg.id} // Use unique message id for key
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3 }}
+                    {messages.map((msg) => (
+                        <div
+                            key={msg.id}
                             className={`p-4 rounded-lg max-w-xs text-sm shadow ${
                                 msg.user === "You"
                                     ? "bg-primary text-primary-foreground self-end"
                                     : "bg-secondary text-secondary-foreground self-start"
                             }`}
                         >
-                            {msg.user === "Bot" ? (
-                                <TypingText
-                                    text={msg.text || ""}
-                                    isAnimating={index === botAnimatingIndex} // Only animate the latest bot message
-                                />
-                            ) : (
-                                msg.text
-                            )}
-                        </motion.div>
+                            {msg.text}
+                        </div>
                     ))}
                 </CardContent>
 
                 {/* Input Section */}
                 <CardContent className="p-4 flex items-center gap-4 border-t">
                     <Input
-                        ref={inputRef} // Use the ref here
+                        ref={inputRef}
                         placeholder="Type your message..."
                         className="flex-1"
                         onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                        disabled={isBotResponding} // Disable input while bot is responding
+                        disabled={isBotResponding}
                     />
-                    <Button
-                        onClick={handleSend}
-                        className="h-10"
-                        disabled={isBotResponding} // Disable send button while bot is responding
-                    >
+                    <Button onClick={handleSend} className="h-10" disabled={isBotResponding}>
                         Send
                     </Button>
                 </CardContent>
