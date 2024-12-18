@@ -9,10 +9,4 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  server: {
-    middlewareMode: true,
-    headers: {
-      'X-Frame-Options': 'ALLOWALL', // Oder setze einen anderen Wert
-    },
-  },
 })
