@@ -20,7 +20,6 @@ const ChatPage: React.FC = () => {
     const inputRef = useRef<HTMLInputElement>(null);
     const [token, setToken] = useState<string | null>(null);
     const [threadId, setThreadId] = useState<string | null>(null);
-
     useEffect(() => {
         async function authenticateAndCreateThread() {
             try {
