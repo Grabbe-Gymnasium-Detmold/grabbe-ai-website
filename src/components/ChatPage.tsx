@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import ReactMarkdown from "react-markdown";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -9,6 +8,7 @@ import rehypeKatex from "rehype-katex";
 import rehypeHighlight from "rehype-highlight";
 import "katex/dist/katex.css";
 import "highlight.js/styles/github-dark.min.css";
+import Markdown from "react-markdown";
 
 const API_URL = "https://api.ai.grabbe.site/chat";
 const AUTH_URL = "https://api.ai.grabbe.site/auth";
@@ -128,20 +128,26 @@ const ChatPage: React.FC = () => {
             }
 
             const reader = response.body?.getReader();
+            if (!reader) {
+                throw new Error("ReadableStream reader is undefined.");
+            }
+
             const decoder = new TextDecoder();
             let done = false;
 
             while (!done) {
-                const { value, done: readerDone } = await reader?.read()!;
+                const { value, done: readerDone } = await reader.read();
                 done = readerDone;
 
                 const chunk = decoder.decode(value, { stream: true });
+                console.log(chunk);
                 setMessages((prev) =>
                     prev.map((msg) =>
                         msg.id === botMessageId ? { ...msg, text: msg.text + chunk } : msg
                     )
                 );
             }
+
         } catch (error: unknown) {
             setMessages((prev) => [
                 ...prev,
@@ -158,8 +164,8 @@ const ChatPage: React.FC = () => {
 
     return (
         <div className="flex flex-col h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
-            <Card className="flex flex-col h-full mx-auto w-full max-w-2xl shadow-xl rounded-xl border border-gray-700 bg-gray-900">
-                <CardHeader className="py-4 border-b bg-gray-800 text-white rounded-t-xl">
+            <Card className="flex flex-col h-full mx-auto w-full max-w-2xl shadow-xl  border border-gray-700 bg-gray-900">
+                <CardHeader className="py-4 border-b bg-gray-800 text-white">
                     <CardTitle className="text-center text-lg font-bold">Grabbe-AI Chat</CardTitle>
                 </CardHeader>
 
@@ -167,23 +173,23 @@ const ChatPage: React.FC = () => {
                     {messages.map((msg) => (
                         <div
                             key={msg.id}
-                            className={`p-4 rounded-lg w-full text-sm shadow-md transition-transform transform-gpu hover:scale-105 ${
+                            className={`p-4 w-full text-sm shadow-md transition-transform transform-gpu hover:scale-105 ${
                                 msg.user === "You"
                                     ? "bg-blue-600 text-white self-end"
                                     : "bg-gray-700 text-gray-200 self-start"
                             }`}
                         >
-                            <ReactMarkdown
+                            <Markdown
                                 remarkPlugins={[remarkGfm, remarkMath]}
                                 rehypePlugins={[rehypeKatex, rehypeHighlight]}
                             >
                                 {msg.text}
-                            </ReactMarkdown>
+                            </Markdown>
                         </div>
                     ))}
                 </CardContent>
 
-                <CardContent className="p-4 flex items-center gap-4 border-t bg-gray-800 rounded-b-lg">
+                <CardContent className="p-4 flex items-center gap-4 border-t bg-gray-800 ">
                     <Input
                         ref={inputRef}
                         placeholder="Type your message..."
