@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
-const API_URL = "https://api.ai.grabbe.site/chat"; // Deine API URL
+const API_URL = "https://api.ai.grabbe.site/chat";
 
 const ChatPage: React.FC = () => {
     const [messages, setMessages] = useState<{ id: number; text: string; user: "You" | "Bot" }[]>([]);
@@ -16,14 +16,13 @@ const ChatPage: React.FC = () => {
         const userMessage = {
             id: Date.now(),
             text: inputRef.current.value.trim(),
-            user: "You",
+            user: "You" as const,
         };
 
         setMessages((prev) => [...prev, userMessage]);
-        inputRef.current.value = ""; // Eingabe leeren
+        inputRef.current.value = "";
         setIsBotResponding(true);
 
-        // Bot Antwort als Stream laden
         const token = localStorage.getItem("session_token");
         if (!token) {
             alert("Bitte melden Sie sich an, um fortzufahren.");
@@ -45,7 +44,7 @@ const ChatPage: React.FC = () => {
             if (!response.ok) {
                 setMessages((prev) => [
                     ...prev,
-                    { id: Date.now(), text: "Fehler beim Abrufen der Antwort.", user: "Bot" },
+                    { id: Date.now(), text: "Fehler beim Abrufen der Antwort.", user: "Bot" as const },
                 ]);
                 setIsBotResponding(false);
                 return;
@@ -61,22 +60,28 @@ const ChatPage: React.FC = () => {
                 done = readerDone;
                 botResponse += decoder.decode(value, { stream: true });
 
-                // Zeige den aktuell gestreamten Text an
                 setMessages((prev) => {
                     const updatedMessages = [...prev];
                     if (updatedMessages.some((msg) => msg.user === "Bot" && msg.id === userMessage.id + 1)) {
                         updatedMessages[updatedMessages.length - 1].text = botResponse;
                     } else {
-                        updatedMessages.push({ id: userMessage.id + 1, text: botResponse, user: "Bot" });
+                        updatedMessages.push({ id: userMessage.id + 1, text: botResponse, user: "Bot" as const });
                     }
                     return updatedMessages;
                 });
             }
-        } catch (error) {
-            setMessages((prev) => [
-                ...prev,
-                { id: Date.now(), text: `Fehler: ${error.message}`, user: "Bot" },
-            ]);
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                setMessages((prev) => [
+                    ...prev,
+                    { id: Date.now(), text: `Fehler: ${error.message}`, user: "Bot" as const },
+                ]);
+            } else {
+                setMessages((prev) => [
+                    ...prev,
+                    { id: Date.now(), text: "Unbekannter Fehler", user: "Bot" as const },
+                ]);
+            }
         } finally {
             setIsBotResponding(false);
         }
@@ -85,12 +90,10 @@ const ChatPage: React.FC = () => {
     return (
         <div className="flex flex-col h-screen bg-background">
             <Card className="flex flex-col h-full mx-auto w-full max-w-2xl shadow-md">
-                {/* Header */}
                 <CardHeader className="py-4 border-b">
                     <CardTitle className="text-center text-lg font-semibold">Grabbe-AI Chat</CardTitle>
                 </CardHeader>
 
-                {/* Chat Content */}
                 <CardContent className="flex-1 overflow-y-auto p-6 space-y-4">
                     {messages.map((msg) => (
                         <div
@@ -106,7 +109,6 @@ const ChatPage: React.FC = () => {
                     ))}
                 </CardContent>
 
-                {/* Input Section */}
                 <CardContent className="p-4 flex items-center gap-4 border-t">
                     <Input
                         ref={inputRef}
