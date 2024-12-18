@@ -3,6 +3,12 @@ import ReactMarkdown from "react-markdown";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import rehypeHighlight from "rehype-highlight";
+import "katex/dist/katex.css";
+import "highlight.js/styles/github-dark.min.css";
 
 const API_URL = "https://api.ai.grabbe.site/chat";
 const AUTH_URL = "https://api.ai.grabbe.site/auth";
@@ -161,13 +167,18 @@ const ChatPage: React.FC = () => {
                     {messages.map((msg) => (
                         <div
                             key={msg.id}
-                            className={`p-4 rounded-lg max-w-xs text-sm shadow-md transition-transform transform-gpu hover:scale-105 ${
+                            className={`p-4 rounded-lg w-full text-sm shadow-md transition-transform transform-gpu hover:scale-105 ${
                                 msg.user === "You"
                                     ? "bg-blue-600 text-white self-end"
                                     : "bg-gray-700 text-gray-200 self-start"
                             }`}
                         >
-                            {msg.user === "Bot" ? <ReactMarkdown>{msg.text}</ReactMarkdown> : msg.text}
+                            <ReactMarkdown
+                                remarkPlugins={[remarkGfm, remarkMath]}
+                                rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                            >
+                                {msg.text}
+                            </ReactMarkdown>
                         </div>
                     ))}
                 </CardContent>
