@@ -1,49 +1,95 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, {useState, useRef, useEffect} from "react";
 import ReactMarkdown from "react-markdown";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import {Input} from "./ui/input";
+import {Button} from "./ui/button";
+import {Card, CardContent, CardHeader, CardTitle} from "./ui/card";
 
 const API_URL = "https://api.ai.grabbe.site/chat";
 const AUTH_URL = "https://api.ai.grabbe.site/auth";
+const THREAD_URL = "https://api.ai.grabbe.site/thread/create";
 
 const ChatPage: React.FC = () => {
     const [messages, setMessages] = useState<{ id: number; text: string; user: "You" | "Bot" }[]>([]);
     const [isBotResponding, setIsBotResponding] = useState<boolean>(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const [token, setToken] = useState<string | null>(null);
+    const [threadId, setThreadId] = useState<string | null>(null);
 
     useEffect(() => {
-        async function login() {
+        async function authenticateAndCreateThread() {
             try {
-                const response = await fetch(AUTH_URL, {
+                const authResponse = await fetch(AUTH_URL, {
                     method: "GET",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {"Content-Type": "application/json"},
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    localStorage.setItem("session_token", data.token);
-                    setToken(data.token);
-                    console.log("Authentifizierung erfolgreich.");
-                } else {
+                if (!authResponse.ok) {
                     console.error("Fehler bei der Authentifizierung.");
+                    return;
                 }
+
+                const authData = await authResponse.json();
+                localStorage.setItem("session_token", authData.token);
+                setToken(authData.token);
+
+                console.log("Authentifizierung erfolgreich.");
+
+                const threadResponse = await fetch(THREAD_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                });
+
+                if (!threadResponse.ok) {
+                    console.error("Fehler beim Erstellen des Threads.");
+                    return;
+                }
+
+                const threadData = await threadResponse.json();
+                setThreadId(threadData.threadId);
+                console.log("Thread erstellt mit ID:", threadData.threadId);
             } catch (error) {
-                console.error("Fehler beim Abrufen der Authentifizierung:", error);
+                console.error("Fehler beim Authentifizieren oder Erstellen des Threads:", error);
             }
         }
 
         const storedToken = localStorage.getItem("session_token");
         if (!storedToken) {
-            login();
+            authenticateAndCreateThread();
         } else {
             setToken(storedToken);
+
+            // Attempt to create thread if token exists but no thread ID is stored
+            if (!threadId) {
+                (async () => {
+                    try {
+                        const threadResponse = await fetch(THREAD_URL, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${storedToken}`,
+                            },
+                        });
+
+                        if (threadResponse.ok) {
+                            const threadData = await threadResponse.json();
+                            setThreadId(threadData.threadId);
+                            console.log("Thread erstellt mit ID:", threadData.threadId);
+                        } else {
+                            console.error("Fehler beim Erstellen des Threads mit gespeichertem Token.");
+                        }
+                    } catch (error) {
+                        console.error("Fehler beim Erstellen des Threads:", error);
+                    }
+                })();
+            }
         }
-    }, []);
+    }, [threadId]);
 
     const handleSend = async (): Promise<void> => {
-        if (!inputRef.current?.value.trim() || isBotResponding || !token) return;
+        if (!inputRef.current?.value.trim() || isBotResponding || !token || !threadId) return;
 
         const userMessage = {
             id: Date.now(),
@@ -59,7 +105,7 @@ const ChatPage: React.FC = () => {
 
         setMessages((prev) => [
             ...prev,
-            { id: botMessageId, text: "", user: "Bot" as const },
+            {id: botMessageId, text: "", user: "Bot" as const},
         ]);
 
         try {
@@ -68,15 +114,18 @@ const ChatPage: React.FC = () => {
                 headers: {
                     "Content-Type": "application/json",
                     "Accept": "text/event-stream",
-                    "Authorization": `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ question: userMessage.text }),
+                body: JSON.stringify({
+                    question: userMessage.text,
+                    threadId: threadId,
+                }),
             });
 
             if (!response.ok) {
                 setMessages((prev) => [
                     ...prev,
-                    { id: Date.now(), text: "Fehler beim Abrufen der Antwort.", user: "Bot" as const },
+                    {id: Date.now(), text: "Fehler beim Abrufen der Antwort.", user: "Bot" as const},
                 ]);
                 setIsBotResponding(false);
                 return;
@@ -87,15 +136,15 @@ const ChatPage: React.FC = () => {
             let done = false;
 
             while (!done) {
-                const { value, done: readerDone } = await reader?.read()!;
+                const {value, done: readerDone} = await reader?.read()!;
                 done = readerDone;
 
-                const chunk = decoder.decode(value, { stream: true });
+                const chunk = decoder.decode(value, {stream: true});
 
                 setMessages((prev) =>
                     prev.map((msg) =>
                         msg.id === botMessageId
-                            ? { ...msg, text: msg.text + chunk }
+                            ? {...msg, text: msg.text + chunk}
                             : msg
                     )
                 );
@@ -104,12 +153,12 @@ const ChatPage: React.FC = () => {
             if (error instanceof Error) {
                 setMessages((prev) => [
                     ...prev,
-                    { id: Date.now(), text: `Fehler: ${error.message}`, user: "Bot" as const },
+                    {id: Date.now(), text: `Fehler: ${error.message}`, user: "Bot" as const},
                 ]);
             } else {
                 setMessages((prev) => [
                     ...prev,
-                    { id: Date.now(), text: "Unbekannter Fehler", user: "Bot" as const },
+                    {id: Date.now(), text: "Unbekannter Fehler", user: "Bot" as const},
                 ]);
             }
         } finally {
@@ -151,7 +200,7 @@ const ChatPage: React.FC = () => {
                         onKeyDown={(e) => e.key === "Enter" && handleSend()}
                         disabled={isBotResponding}
                     />
-                    <Button onClick={handleSend} className="h-10" disabled={isBotResponding || !token}>
+                    <Button onClick={handleSend} className="h-10" disabled={isBotResponding || !token || !threadId}>
                         Send
                     </Button>
                 </CardContent>
