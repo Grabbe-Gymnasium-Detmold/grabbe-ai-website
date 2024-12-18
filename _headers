@@ -1,3 +1,17 @@
-# This is a comment
-/*
+http://*.grabbe-gymnasium.de/*
   X-Frame-Options: ALLOWALL
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Content-Security-Policy: frame-ancestors 'self' *.grabbe-gymnasium.de *.grabbe.site;
+
+https://*.grabbe-gymnasium.de/*
+  X-Frame-Options: ALLOWALL
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Content-Security-Policy: frame-ancestors 'self' *.grabbe-gymnasium.de *.grabbe.site;
+
+https://*.grabbe.site/*
+  X-Frame-Options: ALLOWALL
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Content-Security-Policy: frame-ancestors 'self' *.grabbe.site *.grabbe-gymnasium.de;
