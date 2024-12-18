@@ -1,17 +1,49 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
 const API_URL = "https://api.ai.grabbe.site/chat";
+const AUTH_URL = "https://api.ai.grabbe.site/auth";
 
 const ChatPage: React.FC = () => {
     const [messages, setMessages] = useState<{ id: number; text: string; user: "You" | "Bot" }[]>([]);
     const [isBotResponding, setIsBotResponding] = useState<boolean>(false);
     const inputRef = useRef<HTMLInputElement>(null);
+    const [token, setToken] = useState<string | null>(null);
+
+    // Authentifizierung beim Laden der Seite
+    useEffect(() => {
+        async function login() {
+            try {
+                const response = await fetch(AUTH_URL, {
+                    method: "GET",
+                    headers: { "Content-Type": "application/json" },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem("session_token", data.token);
+                    setToken(data.token);
+                    console.log("Authentifizierung erfolgreich.");
+                } else {
+                    console.error("Fehler bei der Authentifizierung.");
+                }
+            } catch (error) {
+                console.error("Fehler beim Abrufen der Authentifizierung:", error);
+            }
+        }
+
+        const storedToken = localStorage.getItem("session_token");
+        if (!storedToken) {
+            login();
+        } else {
+            setToken(storedToken);
+        }
+    }, []);
 
     const handleSend = async (): Promise<void> => {
-        if (!inputRef.current?.value.trim() || isBotResponding) return;
+        if (!inputRef.current?.value.trim() || isBotResponding || !token) return;
 
         const userMessage = {
             id: Date.now(),
@@ -22,13 +54,6 @@ const ChatPage: React.FC = () => {
         setMessages((prev) => [...prev, userMessage]);
         inputRef.current.value = "";
         setIsBotResponding(true);
-
-        const token = localStorage.getItem("session_token");
-        if (!token) {
-            alert("Bitte melden Sie sich an, um fortzufahren.");
-            setIsBotResponding(false);
-            return;
-        }
 
         try {
             const response = await fetch(API_URL, {
@@ -117,7 +142,7 @@ const ChatPage: React.FC = () => {
                         onKeyDown={(e) => e.key === "Enter" && handleSend()}
                         disabled={isBotResponding}
                     />
-                    <Button onClick={handleSend} className="h-10" disabled={isBotResponding}>
+                    <Button onClick={handleSend} className="h-10" disabled={isBotResponding || !token}>
                         Send
                     </Button>
                 </CardContent>
