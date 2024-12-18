@@ -10,8 +10,9 @@ export default defineConfig({
     },
   },
   server: {
+    middlewareMode: true,
     headers: {
-      "X-Frame-Options": "ALLOWALL",
+      'X-Frame-Options': 'ALLOWALL', // Oder setze einen anderen Wert
     },
   },
 })
