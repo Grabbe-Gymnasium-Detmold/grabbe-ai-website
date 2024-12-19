@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Interface</title>
+</head>
+<body>
+
+<h2>Chat Interface</h2>
+
+<div>
+    <input type="text" id="userInput" placeholder="Type your message..." />
+    <button id="sendButton">Send</button>
+</div>
+
+<div id="chatOutput"></div>
+
+<script>
+    const API_URL = "https://api.grabbe.site/chat";
+    const AUTH_URL = "https://api.grabbe.site/auth";
+    const THREAD_URL = "https://api.grabbe.site/thread/create";
+
+    let token = null;
+    let threadId = null;
+
+    // Funktion zur Authentifizierung
+    async function authenticate() {
+        try {
+            const authResponse = await fetch(AUTH_URL, {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+            });
+
+            if (!authResponse.ok) {
+                console.error("Authentication failed.");
+                return;
+            }
+
+            const authData = await authResponse.json();
+            localStorage.setItem("session_token", authData.token);
+            token = authData.token;
+        } catch (error) {
+            console.error("Error during authentication:", error);
+        }
+    }
+
+    // Funktion zum Erstellen eines neuen Threads
+    async function createThread() {
+        if (!token) return null;
+
+        try {
+            const threadResponse = await fetch(THREAD_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!threadResponse.ok) {
+                console.error("Thread creation failed.");
+                return null;
+            }
+
+            const threadData = await threadResponse.json();
+            return threadData.threadId;
+        } catch (error) {
+            console.error("Error creating thread:", error);
+            return null;
+        }
+    }
+
+    // Funktion zum Senden der Nachricht
+    async function handleSend() {
+        const userInput = document.getElementById('userInput');
+        const chatOutput = document.getElementById('chatOutput');
+
+        if (!userInput.value.trim() || !token) return;
+
+        const userMessage = `<div><strong>You:</strong> ${userInput.value.trim()}</div>`;
+        chatOutput.innerHTML += userMessage;
+
+        let currentThreadId = threadId;
+        if (!currentThreadId) {
+            currentThreadId = await createThread();
+            if (!currentThreadId) {
+                chatOutput.innerHTML += "<div><strong>Bot:</strong> Error creating thread. Please try again later.</div>";
+                return;
+            }
+            threadId = currentThreadId;
+        }
+
+        const botMessageId = Date.now() + 1;
+        chatOutput.innerHTML += `<div><strong>Bot:</strong> </div>`;
+
+        try {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "text/event-stream",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    question: userInput.value.trim(),
+                    threadId: currentThreadId,
+                }),
+            });
+            userInput.value = "";
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch bot response.");
+            }
+
+            const reader = response.body?.getReader();
+            if (!reader) {
+                throw new Error("ReadableStream reader is undefined.");
+            }
+
+            const decoder = new TextDecoder();
+            let done = false;
+            let botMessageText = "";
+
+            // Schritt-für-Schritt Streaming-Prozess
+            while (!done) {
+                const { value, done: readerDone } = await reader.read();
+                done = readerDone;
+
+                const chunk = decoder.decode(value, { stream: true });
+                botMessageText += chunk;
+
+                // Hier wird der Text nach und nach im Ausgabefeld aktualisiert
+                chatOutput.innerHTML = chatOutput.innerHTML.replace(
+                    `<div><strong>Bot:</strong> </div>`,
+                    `<div><strong>Bot:</strong> ${botMessageText}</div>`
+                );
+
+                // Optional: scrollen, um den neuesten Text sichtbar zu halten
+                chatOutput.scrollTop = chatOutput.scrollHeight;
+            }
+        } catch (error) {
+            chatOutput.innerHTML += `<div><strong>Bot:</strong> Error: ${error.message}</div>`;
+        }
+    }
+
+    // Authentifizierung und Initialisierung
+    const storedToken = localStorage.getItem("session_token");
+    if (!storedToken) {
+        authenticate();
+    } else {
+        token = storedToken;
+    }
+
+    document.getElementById('sendButton').addEventListener('click', handleSend);
+</script>
+</body>
+</html>
