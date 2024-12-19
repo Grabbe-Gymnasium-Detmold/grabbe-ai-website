@@ -1,7 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { Card, CardContent, CardHeader } from "./ui/card";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
@@ -173,41 +170,45 @@ const ChatPage: React.FC = () => {
     };
 
     const exampleQuestions = [
-        "Wer ist der Schulleiter?",
-        "Wie melde ich mein Kind krank?",
-        "Wo finde ich die IServ-Seite?",
+        "Wann ist der nächste Elternsprechtag?",
+        "Wie erreiche ich das Sekretariat des Grabbe-Gymnasiums?",
+        "Wo ist das Grabbe-Gymnasium?",
     ];
 
     return (
-        <div className="flex flex-col h-screen bg-white text-gray-900">
-            <Card className="flex flex-col h-full mx-auto w-full max-w-4xl shadow-md border border-gray-300 bg-white">
-                <CardHeader className="p-4 bg-gray-100">
-                    <div className="text-2xl font-bold text-center animate-pulse">Chat Interface</div>
-                </CardHeader>
-                <CardContent className="flex-1 overflow-y-auto p-4 space-y-2 relative">
-                    {showExampleCards && (
-                        <div className="absolute inset-0 flex justify-center items-center gap-4 animate-fade-in">
-                            {exampleQuestions.map((question, index) => (
-                                <Card
-                                    key={index}
-                                    className="p-4 bg-gray-200 text-gray-900 rounded-lg shadow-md cursor-pointer hover:bg-gray-300 transform transition-transform hover:scale-105 hover:rotate-1"
-                                    onClick={() => {
-                                        if (inputRef.current) inputRef.current.value = question;
-                                        handleSend();
-                                    }}
-                                >
-                                    {question}
-                                </Card>
-                            ))}
-                        </div>
-                    )}
+        <div className="bg-white text-gray-800 flex justify-center items-center min-h-screen">
+            <div className="container mx-auto max-w-xl p-10 flex flex-col items-center">
+                <div className="logo mb-6 text-sm text-gray-500">Logo</div>
+                <div className="title text-2xl font-semibold mb-4">GrabbeAI</div>
+                <div className="subtitle text-base text-gray-600 mb-10">
+                    Der digitale Assistent des Grabbe-Gymnasiums Detmold
+                </div>
+
+                {showExampleCards && (
+                    <div className="suggestions flex flex-wrap justify-center gap-5 mb-16 w-full">
+                        {exampleQuestions.map((question, index) => (
+                            <div
+                                key={index}
+                                className="suggestion-box bg-white rounded-xl py-4 px-5 text-base text-gray-800 shadow-md hover:bg-gray-200 cursor-pointer min-w-[150px] max-w-[200px] text-center overflow-hidden text-ellipsis whitespace-nowrap"
+                                onClick={() => {
+                                    if (inputRef.current) inputRef.current.value = question;
+                                    handleSend();
+                                }}
+                            >
+                                {question}
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                <div className="w-full flex flex-col gap-4">
                     {messages.map((msg) => (
                         <div
                             key={msg.id}
                             className={`p-3 rounded-md text-sm shadow-sm transition-all transform ${
                                 msg.user === "You"
-                                    ? "bg-blue-500 text-white self-end animate-slide-up"
-                                    : "bg-gray-100 text-gray-900 self-start animate-fade-in"
+                                    ? "bg-blue-500 text-white self-end"
+                                    : "bg-gray-100 text-gray-900 self-start"
                             }`}
                         >
                             <Markdown
@@ -221,24 +222,42 @@ const ChatPage: React.FC = () => {
                             </Markdown>
                         </div>
                     ))}
-                </CardContent>
-                <CardContent className="p-4 flex items-center gap-2 bg-gray-100 animate-fade-in">
-                    <Input
-                        ref={inputRef}
-                        placeholder="Type your message..."
-                        className="flex-1 px-4 py-2 rounded-lg bg-gray-200 text-gray-900 border border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                        disabled={isBotResponding}
-                    />
-                    <Button
-                        onClick={handleSend}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 animate-bounce"
-                        disabled={isBotResponding || !token}
-                    >
-                        Send
-                    </Button>
-                </CardContent>
-            </Card>
+                </div>
+
+                <div className="input-area-wrapper w-full flex justify-center mt-6">
+                    <div className="input-area flex items-center bg-gray-100 rounded-full px-4 py-3 w-full max-w-xl">
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            placeholder="Message GrabbeAI"
+                            className="flex-1 bg-transparent outline-none text-base px-2"
+                            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                            disabled={isBotResponding}
+                        />
+                        <button
+                            aria-label="Send prompt"
+                            className="send-button flex items-center justify-center h-10 w-10 rounded-full bg-black text-white hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-black"
+                            onClick={handleSend}
+                            disabled={isBotResponding || !token}
+                        >
+                            <svg
+                                width="24"
+                                height="24"
+                                viewBox="0 0 32 32"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    fillRule="evenodd"
+                                    clipRule="evenodd"
+                                    d="M15.1918 8.90615C15.6381 8.45983 16.3618 8.45983 16.8081 8.90615L21.9509 14.049C22.3972 14.4953 22.3972 15.2189 21.9509 15.6652C21.5046 16.1116 20.781 16.1116 20.3347 15.6652L17.1428 12.4734V22.2857C17.1428 22.9169 16.6311 23.4286 15.9999 23.4286C15.3688 23.4286 14.8571 22.9169 14.8571 22.2857V12.4734L11.6652 15.6652C11.2189 16.1116 10.4953 16.1116 10.049 15.6652C9.60265 15.2189 9.60265 14.4953 10.049 14.049L15.1918 8.90615Z"
+                                    fill="currentColor"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
