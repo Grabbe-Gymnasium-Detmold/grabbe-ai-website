@@ -10,6 +10,7 @@ import "katex/dist/katex.css";
 import "highlight.js/styles/github-dark.min.css";
 import Markdown from "react-markdown";
 import { BlueLink } from "@/components/BlueLink.tsx";
+import rehypSemanticBlockquotes from "rehype-semantic-blockquotes";
 
 const API_URL = "https://api.grabbe.site/chat";
 const AUTH_URL = "https://api.grabbe.site/auth";
@@ -178,9 +179,9 @@ const ChatPage: React.FC = () => {
     ];
 
     return (
-        <div className="flex flex-col h-screen bg-gray-900 text-gray-100">
-            <Card className="flex flex-col h-full mx-auto w-full max-w-4xl shadow-md border border-gray-700 bg-gray-800">
-                <CardHeader className="p-4 bg-gray-700">
+        <div className="flex flex-col h-screen bg-white text-gray-900">
+            <Card className="flex flex-col h-full mx-auto w-full max-w-4xl shadow-md border border-gray-300 bg-white">
+                <CardHeader className="p-4 bg-gray-100">
                     <div className="text-2xl font-bold text-center animate-pulse">Chat Interface</div>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-y-auto p-4 space-y-2 relative">
@@ -189,7 +190,7 @@ const ChatPage: React.FC = () => {
                             {exampleQuestions.map((question, index) => (
                                 <Card
                                     key={index}
-                                    className="p-4 bg-gray-600 text-gray-100 rounded-lg shadow-md cursor-pointer hover:bg-gray-500 transform transition-transform hover:scale-105 hover:rotate-1"
+                                    className="p-4 bg-gray-200 text-gray-900 rounded-lg shadow-md cursor-pointer hover:bg-gray-300 transform transition-transform hover:scale-105 hover:rotate-1"
                                     onClick={() => {
                                         if (inputRef.current) inputRef.current.value = question;
                                         handleSend();
@@ -206,12 +207,12 @@ const ChatPage: React.FC = () => {
                             className={`p-3 rounded-md text-sm shadow-sm transition-all transform ${
                                 msg.user === "You"
                                     ? "bg-blue-500 text-white self-end animate-slide-up"
-                                    : "bg-gray-600 text-gray-100 self-start animate-fade-in"
+                                    : "bg-gray-100 text-gray-900 self-start animate-fade-in"
                             }`}
                         >
                             <Markdown
                                 remarkPlugins={[remarkGfm, remarkMath]}
-                                rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                                rehypePlugins={[rehypeKatex, rehypeHighlight, rehypSemanticBlockquotes]}
                                 components={{
                                     a: (props) => <BlueLink {...props} />,
                                 }}
@@ -221,11 +222,11 @@ const ChatPage: React.FC = () => {
                         </div>
                     ))}
                 </CardContent>
-                <CardContent className="p-4 flex items-center gap-2 bg-gray-700 animate-fade-in">
+                <CardContent className="p-4 flex items-center gap-2 bg-gray-100 animate-fade-in">
                     <Input
                         ref={inputRef}
                         placeholder="Type your message..."
-                        className="flex-1 px-4 py-2 rounded-lg bg-gray-600 text-gray-100 border border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 px-4 py-2 rounded-lg bg-gray-200 text-gray-900 border border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         onKeyDown={(e) => e.key === "Enter" && handleSend()}
                         disabled={isBotResponding}
                     />
