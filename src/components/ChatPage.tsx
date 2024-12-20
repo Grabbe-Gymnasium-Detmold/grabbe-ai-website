@@ -407,6 +407,10 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                         <span className="mt-2 text-gray-600 dark:text-gray-600 text-xs">
                             GrabbeAI kann Fehler machen. Überprüfe wichtige Informationen.
                         </span>
+                        <span className="mt-2 text-gray-600 dark:text-gray-600 text-xs">
+                            Durch die Nutzung von GrabbeAI erklären Sie sich mit der Verarbeitung Ihrer Daten gemäß unserer <a href="/datenschutz.html">Datenschutzerklärung</a> und <a href="/bedingungen.html">Nutzungsbedingungen</a> einverstanden.
+                        </span>
+
 
 
                     </div>
