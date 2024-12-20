@@ -206,10 +206,10 @@ const ChatPage: React.FC = () => {
                 </button>
 
                 <div className="container mx-auto max-w-xl p-10 flex flex-col items-center">
-                    <div className="logo mb-6 text-sm text-gray-500">Logo</div>
+                    {/*<div className="logo mb-6 text-sm text-gray-500">Logo</div>*/}
                     <div className="title text-2xl font-semibold mb-4">GrabbeAI</div>
                     <div className="subtitle text-base text-gray-600 mb-10">
-                        Der digitale Assistent des Grabbe-Gymnasiums Detmold
+                        Wobei kann ich dir heute helfen?
                     </div>
 
                     {showExampleCards && (
