@@ -275,7 +275,7 @@ const ChatPage: React.FC = () => {
                             <input
                                 ref={inputRef}
                                 type="text"
-                                placeholder="Message GrabbeAI"
+                                placeholder="Nachricht"
                                 className="flex-1 bg-transparent outline-none text-base px-2 rounded-full dark:text-white dark:placeholder-white"
                                 value={inputText}
                                 onChange={handleInputChange}
