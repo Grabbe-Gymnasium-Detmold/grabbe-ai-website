@@ -233,10 +233,10 @@ const ChatPage: React.FC = () => {
                         {messages.map((msg) => (
                             <div
                                 key={msg.id}
-                                className={`p-3 rounded-md text-sm shadow-sm transition-all transform ${
+                                className={`p-3 rounded-2xl text-sm shadow-sm transition-all transform ${
                                     msg.user === "You"
-                                        ? "dark:bg-gray-500 dark:text-white self-end  rounded-2xl bg-blue-200"
-                                        : "dark:bg-gray-700  dark:text-white self-start rounded-2xl bg-gray-100"
+                                        ? "dark:bg-gray-500 dark:text-white self-end bg-blue-200"
+                                        : "dark:bg-gray-700  dark:text-white self-start bg-gray-100"
                                 }`}
                             >
                                 <Markdown
