@@ -210,7 +210,7 @@ const ChatPage: React.FC = () => {
         <div className="bg-white text-gray-800 flex justify-center items-center min-h-screen dark:bg-gray-800">
             <div className="bg-white text-gray-800 dark:bg-gray-800 dark:text-white">
 
-                <div >
+                <div>
                     <button
                         onClick={toggleDarkMode}
                         className={`p-1 w-16 h-8 flex items-center rounded-full float-right transition-all duration-300 ${
@@ -317,18 +317,19 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                         {showExampleCards && (
                             <div className="suggestions flex flex-wrap justify-center gap-5 mb-16 w-full">
                                 {exampleQuestions.map((question, index) => (
-                                    <div
+                                    <span
                                         key={index}
-                                        className="suggestion-box bg-gray-100  dark:text-white dark:bg-gray-700 rounded-xl py-4 px-5 text-base text-gray-800 shadow-md hover:bg-gray-200 cursor-pointer min-w-[150px] max-w-[200px] text-center overflow-hidden text-ellipsis whitespace-nowrap"
+                                        className="suggestion-box bg-gray-100 text-wrap dark:text-white dark:bg-gray-700 rounded-xl py-4 px-5 text-base text-gray-800 shadow-md hover:bg-gray-200 cursor-pointer min-w-[150px] max-w-[200px] text-center overflow-hidden text-ellipsis whitespace-nowrap flex items-center justify-center"
                                         onClick={() => {
                                             setInputText(question);
                                             handleSend();
                                         }}
                                     >
-                                        {question}
-                                    </div>
+            {question}
+        </span>
                                 ))}
                             </div>
+
                         )}
 
                         <div className="w-full flex flex-col gap-4">
