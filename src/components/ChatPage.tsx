@@ -21,6 +21,9 @@ const ChatPage: React.FC = () => {
     const [token, setToken] = useState<string | null>(null);
     const [threadId, setThreadId] = useState<string | null>(null);
     const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+    const [inputText, setInputText] = useState<string>("");
+
+    const MAX_CHARACTERS = 150;
 
     useEffect(() => {
         async function authenticate() {
@@ -100,19 +103,19 @@ const ChatPage: React.FC = () => {
     };
 
     const handleSend = async (): Promise<void> => {
-        if (!inputRef.current?.value.trim() || isBotResponding || !token) return;
+        if (!inputText.trim() || isBotResponding || !token || inputText.length > MAX_CHARACTERS) return;
 
         setIsBotResponding(true);
         setShowExampleCards(false);
 
         const userMessage = {
             id: Date.now(),
-            text: inputRef.current.value.trim(),
+            text: inputText.trim(),
             user: "You" as const,
         };
 
         setMessages((prev) => [...prev, userMessage]);
-        inputRef.current.value = "";
+        setInputText(""); // Clear the input field
 
         let currentThreadId = threadId;
         if (!currentThreadId) {
@@ -195,6 +198,13 @@ const ChatPage: React.FC = () => {
         "Wo ist das Grabbe-Gymnasium?",
     ];
 
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        if (value.length <= MAX_CHARACTERS) {
+            setInputText(value);
+        }
+    };
+
     return (
         <div className="bg-white text-gray-800 flex justify-center items-center min-h-screen dark:bg-gray-800">
             <div className="bg-white text-gray-800 dark:bg-gray-800 dark:text-white">
@@ -219,7 +229,7 @@ const ChatPage: React.FC = () => {
                                     key={index}
                                     className="suggestion-box bg-white rounded-xl py-4 px-5 text-base text-gray-800 shadow-md hover:bg-gray-200 cursor-pointer min-w-[150px] max-w-[200px] text-center overflow-hidden text-ellipsis whitespace-nowrap"
                                     onClick={() => {
-                                        if (inputRef.current) inputRef.current.value = question;
+                                        setInputText(question);
                                         handleSend();
                                     }}
                                 >
@@ -236,7 +246,7 @@ const ChatPage: React.FC = () => {
                                 className={`p-3 rounded-2xl text-sm shadow-sm transition-all transform ${
                                     msg.user === "You"
                                         ? "dark:bg-gray-500 dark:text-white self-end bg-blue-200"
-                                        : "dark:bg-gray-700  dark:text-white self-start bg-gray-100"
+                                        : "dark:bg-gray-700 dark:text-white self-start bg-gray-100"
                                 }`}
                             >
                                 <Markdown
@@ -252,14 +262,22 @@ const ChatPage: React.FC = () => {
                         ))}
                     </div>
 
+                    {/* Error message if input exceeds max length */}
+                    {inputText.length > MAX_CHARACTERS && (
+                        <div className="text-red-500 text-sm mb-2">
+                            Du kannst nur bis zu {MAX_CHARACTERS} Zeichen eingeben. Bitte entferne {inputText.length - MAX_CHARACTERS} Zeichen.
+                        </div>
+                    )}
+
                     <div className="input-area-wrapper w-full flex justify-center mt-6">
-                        <div
-                            className="input-area flex items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-3 w-full max-w-xl">
+                        <div className="input-area flex items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-3 w-full max-w-xl">
                             <input
                                 ref={inputRef}
                                 type="text"
                                 placeholder="Message GrabbeAI"
-                                className="flex-1 bg-transparent outline-none text-base px-2 rounded-full dark:text-white  dark:placeholder-white"
+                                className="flex-1 bg-transparent outline-none text-base px-2 rounded-full dark:text-white dark:placeholder-white"
+                                value={inputText}
+                                onChange={handleInputChange}
                                 onKeyDown={(e) => e.key === "Enter" && handleSend()}
                                 disabled={isBotResponding}
                             />
@@ -267,7 +285,7 @@ const ChatPage: React.FC = () => {
                                 aria-label="Send prompt"
                                 className="send-button flex items-center justify-center h-10 w-10 rounded-full bg-black text-white hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-black dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500"
                                 onClick={handleSend}
-                                disabled={isBotResponding || !token}
+                                disabled={isBotResponding || !token || inputText.length > MAX_CHARACTERS}
                             >
                                 <svg
                                     width="24"
@@ -286,8 +304,6 @@ const ChatPage: React.FC = () => {
                             </button>
                         </div>
                     </div>
-
-
                 </div>
             </div>
         </div>
