@@ -191,8 +191,9 @@ const ChatPage: React.FC = () => {
 
     const exampleQuestions = [
         "Wann ist der nächste Elternsprechtag?",
-        "Wie erreiche ich das Sekretariat des Grabbe-Gymnasiums?",
+        "Wie erreiche ich das Sekretariat?",
         "Wo ist das Grabbe-Gymnasium?",
+        "Was muss ich tun, wenn mein Kind krank ist?"
     ];
 
     return (
