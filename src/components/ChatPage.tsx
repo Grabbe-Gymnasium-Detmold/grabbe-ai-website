@@ -404,11 +404,9 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                                 </button>
                             </div>
                         </div>
-                        <span className="mt-2 text-gray-600 dark:text-gray-600 text-xs">
-                            GrabbeAI kann Fehler machen. Überprüfe wichtige Informationen.
-                        </span>
+                        
                         <div className="mt-2 text-center text-gray-600 dark:text-gray-600 text-xs">
-                            Mit der Nutzung von GrabbeAI stimmen Sie unseren <a href="/bedingungen.html" className="underline hover:text-gray-800">Nutzungsbedingungen</a> und der <a href="/datenschutz.html" className="underline hover:text-gray-800">Datenschutzerklärung</a> zu.
+                            GrabbeAI kann Fehler machen. Überprüfe wichtige Informationen. Mit der Nutzung von GrabbeAI stimmen Sie unseren <a href="/bedingungen.html" className="underline hover:text-gray-800">Nutzungsbedingungen</a> und der <a href="/datenschutz.html" className="underline hover:text-gray-800">Datenschutzerklärung</a> zu.
                         </div>
 
 
