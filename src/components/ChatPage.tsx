@@ -374,7 +374,7 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                                 <input
                                     ref={inputRef}
                                     type="text"
-                                    placeholder="Message GrabbeAI"
+                                    placeholder="Schreibe GrabbeAI..."
                                     className="flex-1 bg-transparent outline-none text-base px-2 rounded-full dark:text-white dark:placeholder-white"
                                     value={inputText}
                                     onChange={handleInputChange}
