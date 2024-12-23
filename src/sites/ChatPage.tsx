@@ -8,6 +8,7 @@ import "highlight.js/styles/github-dark.min.css";
 import Markdown from "react-markdown";
 import {BlueLink} from "@/components/BlueLink.tsx";
 import rehypSemanticBlockquotes from "rehype-semantic-blockquotes";
+import {FaThumbsDown, FaThumbsUp} from "react-icons/fa";
 
 const API_URL = "https://api.grabbe.site/chat";
 const AUTH_URL = "https://api.grabbe.site/auth";
@@ -76,7 +77,15 @@ const ChatPage: React.FC = () => {
     const toggleDarkMode = () => {
         setIsDarkMode((prevMode) => !prevMode);
     };
+    const handleThumbsUp = (id: number) => {
+        // Logik, um den Daumen hoch zu verarbeiten
+        console.log("Thumbs Up for message", id);
+    };
 
+    const handleThumbsDown = (id: number) => {
+        // Logik, um den Daumen runter zu verarbeiten
+        console.log("Thumbs Down for message", id);
+    };
     const createThread = async (): Promise<string | null> => {
         if (!token) return null;
 
@@ -336,10 +345,10 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                             {messages.map((msg) => (
                                 <div
                                     key={msg.id}
-                                    className={`p-3 rounded-2xl text-sm shadow-sm transition-all transform ${
+                                    className={`p-3 rounded-2xl text-sm shadow-sm transition-all transform  ${
                                         msg.user === "You"
                                             ? "dark:bg-gray-500 dark:text-white self-end bg-blue-200"
-                                            : "dark:bg-gray-700 dark:text-white self-start bg-gray-100"
+                                            : "dark:bg-gray-700 dark:text-white self-start bg-gray-100 relative group"
                                     }`}
                                 >
                                     <Markdown
@@ -351,7 +360,17 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                                     >
                                         {msg.text}
                                     </Markdown>
+                                    <div
+                                        className="absolute transform translate-x-4 translate-y-4 opacity-0 group-hover:opacity-100 flex space-x-2">
+                                        <FaThumbsUp
+                                            onClick={() => handleThumbsUp(msg.id)}
+                                            className="text-lg text-green-500 cursor-pointer hover:scale-110 transition-transform duration-300"/>
+                                        <FaThumbsDown
+                                            onClick={() => handleThumbsDown(msg.id)}
+                                            className="text-lg text-red-500 cursor-pointer hover:scale-110 transition-transform duration-300"/>
+                                    </div>
                                 </div>
+
                             ))}
                         </div>
 
@@ -404,12 +423,14 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                                 </button>
                             </div>
                         </div>
-                        
+
                         <div className="mt-2 text-center text-gray-600 dark:text-gray-600 text-xs">
-                            GrabbeAI kann Fehler machen. Überprüfe wichtige Informationen. Mit der Nutzung von GrabbeAI stimmen Sie unseren <a href="/tos" className="underline hover:text-gray-800">Nutzungsbedingungen</a> und der <a href="/privacy" className="underline hover:text-gray-800">Datenschutzerklärung</a> zu.
+                            GrabbeAI kann Fehler machen. Überprüfe wichtige Informationen. Mit der Nutzung von GrabbeAI
+                            stimmen Sie unseren <a href="/tos"
+                                                   className="underline hover:text-gray-800">Nutzungsbedingungen</a> und
+                            der <a href="/privacy"
+                                   className="underline hover:text-gray-800">Datenschutzerklärung</a> zu.
                         </div>
-
-
 
 
                     </div>
