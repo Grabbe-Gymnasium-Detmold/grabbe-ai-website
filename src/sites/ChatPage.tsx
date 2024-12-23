@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect} from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
@@ -6,14 +6,15 @@ import rehypeHighlight from "rehype-highlight";
 import "katex/dist/katex.css";
 import "highlight.js/styles/github-dark.min.css";
 import Markdown from "react-markdown";
-import {BlueLink} from "@/components/BlueLink.tsx";
-import rehypSemanticBlockquotes from "rehype-semantic-blockquotes";
-import {FaThumbsDown, FaThumbsUp} from "react-icons/fa";
+import { BlueLink } from "@/components/BlueLink.tsx";
+import rehypeSemanticBlockquotes from "rehype-semantic-blockquotes";
+import { FaThumbsDown, FaThumbsUp } from "react-icons/fa";
 
 const API_URL = "https://api.grabbe.site/chat";
 const AUTH_URL = "https://api.grabbe.site/auth";
 const THREAD_URL = "https://api.grabbe.site/thread/create";
 const EXAMPLE_QUESTION_URL = "https://api.grabbe.site/examples";
+const CHECK_TOKEN_URL = "https://api.grabbe.site/auth/check";
 
 const ChatPage: React.FC = () => {
     const [messages, setMessages] = useState<{ id: number; text: string; user: "You" | "Bot" }[]>([]);
@@ -25,100 +26,118 @@ const ChatPage: React.FC = () => {
     const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
     const [inputText, setInputText] = useState<string>("");
     const [exampleQuestions, setExampleQuestions] = useState<string[]>([""]);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const MAX_CHARACTERS = 150;
 
-    useEffect(() => {
-        async function authenticate() {
-            try {
-                const authResponse = await fetch(AUTH_URL, {
-                    method: "GET",
-                    headers: {"Content-Type": "application/json"},
-                });
+    const authenticate = useCallback(async () => {
+        try {
+            const authResponse = await fetch(AUTH_URL, {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+            });
 
-                if (!authResponse.ok) {
-                    console.error("Authentication failed.");
-                    return;
-                }
-
-                const authData = await authResponse.json();
-                localStorage.setItem("session_token", authData.token);
-                setToken(authData.token);
-                console.log(authData);
-            } catch (error) {
-                console.error("Error during authentication:", error);
+            if (!authResponse.ok) {
+                throw new Error("Authentication failed.");
             }
+
+            const authData = await authResponse.json();
+            localStorage.setItem("session_token", authData.token);
+            setToken(authData.token);
+        } catch (error) {
+            setErrorMessage("Es gab ein Problem bei der Anmeldung. Bitte versuche es später noch einmal.");
         }
+    }, []);
 
+    const validateToken = useCallback(async (storedToken: string): Promise<boolean> => {
+        try {
+            const response = await fetch(CHECK_TOKEN_URL, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${storedToken}`,
+                },
+            });
 
+            if (!response.ok) {
+                throw new Error("Token validation failed.");
+            }
 
-        const storedToken = localStorage.getItem("session_token");
-        if (!storedToken) {
-            authenticate();
-
-
-        } else {
-            setToken(storedToken);
-
+            return true;
+        } catch (error) {
+            setErrorMessage("Es gab ein Problem mit deinem Login. Bitte melde dich erneut an.");
+            return false;
         }
     }, []);
 
     useEffect(() => {
-        fetchExampleQuestions();
-    }, [token]);
-    const fetchExampleQuestions = async () => {
-        try {
-            const qResponse = await fetch(EXAMPLE_QUESTION_URL, {
-                method: "GET",
-                headers: {"Content-Type": "application/json", Authorization: `Bearer ${token}`,},
+        const checkToken = async () => {
+            const storedToken = localStorage.getItem("session_token");
 
-            });
+            if (storedToken) {
+                const isValid = await validateToken(storedToken);
+                if (isValid) {
+                    setToken(storedToken);
+                    return;
+                }
 
-            if (!qResponse.ok) {
-                console.error("Fetching example questions failed.");
-                return;
+                localStorage.removeItem("session_token");
             }
 
-            const example_questions = await qResponse.json();
-            setExampleQuestions(example_questions.questions);
-        } catch (error) {
-            console.error("Error during fetch example questions: ", error);
-        }
-    };
+            await authenticate();
+        };
 
+        checkToken();
+    }, [authenticate, validateToken]);
 
+    useEffect(() => {
+        const fetchExampleQuestions = async () => {
+            if (!token) return;
+
+            try {
+                const cachedQuestions = localStorage.getItem("example_questions");
+                if (cachedQuestions) {
+                    setExampleQuestions(JSON.parse(cachedQuestions));
+                    return;
+                }
+
+                const qResponse = await fetch(EXAMPLE_QUESTION_URL, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (!qResponse.ok) {
+                    throw new Error("Fetching example questions failed.");
+                }
+
+                const { questions } = await qResponse.json();
+                localStorage.setItem("example_questions", JSON.stringify(questions));
+                setExampleQuestions(questions);
+            } catch (error) {
+                setErrorMessage("Es konnte keine Verbindung zu den Beispiel-Fragen hergestellt werden. Bitte versuche es später erneut.");
+            }
+        };
+
+        fetchExampleQuestions();
+    }, [token]);
 
     useEffect(() => {
         const savedTheme = localStorage.getItem("theme");
-        if (savedTheme) {
-            setIsDarkMode(savedTheme === "dark");
-        } else {
-            setIsDarkMode(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
-        }
+        setIsDarkMode(savedTheme === "dark" || (savedTheme === null && window.matchMedia("(prefers-color-scheme: dark)").matches));
     }, []);
 
     useEffect(() => {
         localStorage.setItem("theme", isDarkMode ? "dark" : "light");
-
-        if (isDarkMode) {
-            document.documentElement.classList.add("dark");
-        } else {
-            document.documentElement.classList.remove("dark");
-        }
+        document.documentElement.classList.toggle("dark", isDarkMode);
     }, [isDarkMode]);
 
-    const toggleDarkMode = () => {
-        setIsDarkMode((prevMode) => !prevMode);
-    };
-    const handleThumbsUp = (id: number) => {
-        // Logik, um den Daumen hoch zu verarbeiten
-        console.log("Thumbs Up for message", id);
-    };
+    const toggleDarkMode = () => setIsDarkMode((prevMode) => !prevMode);
 
-    const handleThumbsDown = (id: number) => {
-        // Logik, um den Daumen runter zu verarbeiten
-        console.log("Thumbs Down for message", id);
-    };
+    const handleThumbsUp = (id: number) => console.log("Thumbs Up for message", id);
+    const handleThumbsDown = (id: number) => console.log("Thumbs Down for message", id);
     const createThread = async (): Promise<string | null> => {
         if (!token) return null;
 
@@ -245,7 +264,14 @@ const ChatPage: React.FC = () => {
     return (
         <div className="bg-white text-gray-800 flex justify-center items-center min-h-screen dark:bg-gray-800">
             <div className="bg-white text-gray-800 dark:bg-gray-800 dark:text-white">
+                <div className={`p-4 ${isDarkMode ? "bg-gray-800 text-white" : "bg-white text-black"}`}>
+                    {errorMessage && (
+                        <div className="mb-4 p-3 border-l-4 border-red-500 bg-red-100 text-red-800 rounded">
+                            {errorMessage}
+                        </div>
+                    )}
 
+                </div>
                 <div>
                     <button
                         onClick={toggleDarkMode}
@@ -380,7 +406,7 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                                 >
                                     <Markdown
                                         remarkPlugins={[remarkGfm, remarkMath]}
-                                        rehypePlugins={[rehypeKatex, rehypeHighlight, rehypSemanticBlockquotes]}
+                                        rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeSemanticBlockquotes]}
                                         components={{
                                             a: (props) => <BlueLink {...props} />,
                                         }}
@@ -452,10 +478,12 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                         </div>
 
                         <div className="mt-2 text-center text-gray-600 dark:text-gray-600 text-xs">
-                            GrabbeAI kann Fehler machen. Überprüfe wichtige Informationen. Mit der Nutzung von GrabbeAI stimmen Sie unseren <a href="/tos" className="underline hover:text-gray-800">Nutzungsbedingungen</a> und der <a href="/privacy" className="underline hover:text-gray-800">Datenschutzerklärung</a> zu.
+                            GrabbeAI kann Fehler machen. Überprüfe wichtige Informationen. Mit der Nutzung von GrabbeAI
+                            stimmen Sie unseren <a href="/tos"
+                                                   className="underline hover:text-gray-800">Nutzungsbedingungen</a> und
+                            der <a href="/privacy"
+                                   className="underline hover:text-gray-800">Datenschutzerklärung</a> zu.
                         </div>
-
-
 
 
                     </div>
