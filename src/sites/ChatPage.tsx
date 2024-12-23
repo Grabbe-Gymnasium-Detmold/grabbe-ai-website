@@ -407,8 +407,8 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                                     disabled={isBotResponding || !token || inputText.length > MAX_CHARACTERS}
                                 >
                                     <svg
-                                        width="24"
-                                        height="24"
+                                        width="32"
+                                        height="32"
                                         viewBox="0 0 32 32"
                                         fill="none"
                                         xmlns="http://www.w3.org/2000/svg"
@@ -426,11 +426,15 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
 
                         <div className="mt-2 text-center text-gray-600 dark:text-gray-600 text-xs">
                             GrabbeAI kann Fehler machen. Überprüfe wichtige Informationen. Mit der Nutzung von GrabbeAI
-                            stimmen Sie unseren <a href="/tos"
-                                                   className="underline hover:text-gray-800">Nutzungsbedingungen</a> und
-                            der <a href="/privacy"
-                                   className="underline hover:text-gray-800">Datenschutzerklärung</a> zu.
+                            stimmen Sie unseren
+                            <a href="/tos"
+                               className="underline hover:text-gray-500 focus:text-gray-500 active:text-gray-500">Nutzungsbedingungen</a> und
+                            der
+                            <a href="/privacy"
+                               className="underline hover:text-gray-500 focus:text-gray-500 active:text-gray-500">Datenschutzerklärung</a> zu.
                         </div>
+
+
 
 
                     </div>
