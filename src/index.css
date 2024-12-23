@@ -55,8 +55,14 @@ h6 {
 }
 
 a {
-    @apply text-blue-600 underline;
+    @apply text-gray-600 underline;
 }
 
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+    *::selection {
+        @apply bg-black text-white;
+    }
+}
