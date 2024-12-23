@@ -1,11 +1,10 @@
 
 import './App.css'
-import ChatPage from "@/components/ChatPage.tsx";
-
+import AppRoutes from './AppRoutes';
 function App() {
 
   return (
-      <ChatPage/>
+      <AppRoutes />
   )
 }
 
