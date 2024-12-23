@@ -388,8 +388,8 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                                     disabled={isBotResponding || !token || inputText.length > MAX_CHARACTERS}
                                 >
                                     <svg
-                                        width="24"
-                                        height="24"
+                                        width="30"
+                                        height="30"
                                         viewBox="0 0 32 32"
                                         fill="none"
                                         xmlns="http://www.w3.org/2000/svg"
