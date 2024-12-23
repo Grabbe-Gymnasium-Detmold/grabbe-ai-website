@@ -204,7 +204,7 @@ const ChatPage: React.FC = () => {
     const exampleQuestions = [
         "Wie viel kostet das Essen in der Mensa?",
         "Wie erreiche ich das Sekretariat?",
-        "Wo ist das Grabbe-Gymnasium?",
+        "Wo finde ich das Anmeldeformular für die neue fünfte Klasse?",
         "Was muss ich tun, wenn mein Kind krank ist?"
     ];
 
