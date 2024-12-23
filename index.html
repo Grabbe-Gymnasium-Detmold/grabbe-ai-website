@@ -2,7 +2,8 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
   <title>GrabbeAI</title>
 
   <!-- Primary Meta Tags -->
@@ -10,7 +11,7 @@
   <meta name="author" content="Finn Busse, Maximilian von Beck">
   <meta name="keywords" content="Grabbe-Gymnasium, Detmold, Schule KI, Schulassistent, Lehrer, Kontakt, Schultermine, Fächer, Organisation, GrabbeAI, Claus Hilbing, Sprenger Grabbe">
   <meta name="robots" content="index, follow">
-  <meta name="language" content="German">
+  <meta name="language" content="de">
   <meta name="revisit-after" content="2 days">
 
   <!-- Favicon -->
@@ -18,6 +19,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="manifest" href="/site.webmanifest">
+
   <!-- OpenGraph Meta Tags -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="GrabbeAI">
@@ -26,29 +28,39 @@
   <meta property="og:image" content="https://beta.grabbe.site/android-chrome-512x512.png">
   <meta property="og:site_name" content="GrabbeAI">
   <meta property="og:locale" content="de_DE">
+  <meta property="og:image:alt" content="Logo von GrabbeAI">
+  <meta property="og:determiner" content="the">
+  <meta property="og:updated_time" content="2024-12-23T12:00:00+00:00">
 
+  <!-- Compatibility Meta Tags -->
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
+  <!-- Twitter Card Tags -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="GrabbeAI">
   <meta name="twitter:description" content="GrabbeAI hilft dir bei all deinen Fragen rund um das Grabbe-Gymnasium!">
   <meta name="twitter:image" content="https://beta.grabbe.site/android-chrome-512x512.png">
   <meta name="twitter:site" content="@GrabbeGymnasium">
 
+  <!-- Canonical Tags -->
   <link rel="canonical" href="https://beta.grabbe.site">
-  <link rel="canonical" href="https://iframe.grabbe.site">
 
+  <!-- Additional SEO Meta Tags -->
   <meta name="category" content="Education">
   <meta name="coverage" content="Germany">
   <meta name="rating" content="General">
   <meta http-equiv="content-language" content="de">
+
+  <!-- Preload and Prefetch -->
   <link rel="preload" href="/src/main.tsx" as="script">
+  <link rel="preconnect" href="https://beta.grabbe.site">
+
+  <!-- Progressive Web App Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="msapplication-TileImage" content="/android-chrome-512x512.png">
-
-
-
-
-
+  <meta name="theme-color" content="#ffffff">
 
   <!-- Structured Data -->
   <script type="application/ld+json">
@@ -64,14 +76,18 @@
         "postalCode": "32756",
         "addressCountry": "DE"
       },
-      "email": "webmaster@grabbe-gymnasium.de",
+      "founder": {
+        "@type": "Person",
+        "name": "Claus Hilbing"
+      },
+      "email": "c.hilbing@grabbe.nrw.schule",
       "telephone": "",
       "sameAs": []
     }
   </script>
 </head>
 <body>
-<div id="root" ></div>
+<div id="root"></div>
 <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>

@@ -13,6 +13,7 @@ import {FaThumbsDown, FaThumbsUp} from "react-icons/fa";
 const API_URL = "https://api.grabbe.site/chat";
 const AUTH_URL = "https://api.grabbe.site/auth";
 const THREAD_URL = "https://api.grabbe.site/thread/create";
+const EXAMPLE_QUESTION_URL = "https://api.grabbe.site/examples";
 
 const ChatPage: React.FC = () => {
     const [messages, setMessages] = useState<{ id: number; text: string; user: "You" | "Bot" }[]>([]);
@@ -23,6 +24,7 @@ const ChatPage: React.FC = () => {
     const [threadId, setThreadId] = useState<string | null>(null);
     const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
     const [inputText, setInputText] = useState<string>("");
+    const [exampleQuestions, setExampleQuestions] = useState<string[]>([""]);
 
     const MAX_CHARACTERS = 150;
 
@@ -42,18 +44,49 @@ const ChatPage: React.FC = () => {
                 const authData = await authResponse.json();
                 localStorage.setItem("session_token", authData.token);
                 setToken(authData.token);
+                console.log(authData);
             } catch (error) {
                 console.error("Error during authentication:", error);
             }
         }
 
+
+
         const storedToken = localStorage.getItem("session_token");
         if (!storedToken) {
             authenticate();
+
+
         } else {
             setToken(storedToken);
+
         }
     }, []);
+
+    useEffect(() => {
+        fetchExampleQuestions();
+    }, [token]);
+    const fetchExampleQuestions = async () => {
+        try {
+            const qResponse = await fetch(EXAMPLE_QUESTION_URL, {
+                method: "GET",
+                headers: {"Content-Type": "application/json", Authorization: `Bearer ${token}`,},
+
+            });
+
+            if (!qResponse.ok) {
+                console.error("Fetching example questions failed.");
+                return;
+            }
+
+            const example_questions = await qResponse.json();
+            setExampleQuestions(example_questions.questions);
+        } catch (error) {
+            console.error("Error during fetch example questions: ", error);
+        }
+    };
+
+
 
     useEffect(() => {
         const savedTheme = localStorage.getItem("theme");
@@ -201,12 +234,6 @@ const ChatPage: React.FC = () => {
         }
     };
 
-    const exampleQuestions = [
-        "Wie viel kostet das Essen in der Mensa?",
-        "Wie erreiche ich das Sekretariat?",
-        "Wo finde ich das Anmeldeformular für die neue fünfte Klasse?",
-        "Was muss ich tun, wenn mein Kind krank ist?"
-    ];
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
