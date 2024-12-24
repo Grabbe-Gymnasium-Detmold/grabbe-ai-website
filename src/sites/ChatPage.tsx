@@ -63,17 +63,23 @@ const ChatPage: React.FC = () => {
         }
     }, []);
 
+
     useEffect(() => {
         const checkToken = async () => {
             const storedToken = localStorage.getItem("session_token");
-            if (storedToken && await validateToken(storedToken)) {
-                setToken(storedToken);
+            if (storedToken) {
+                const isValid = await validateToken(storedToken);
+                if (isValid) {
+                    setToken(storedToken);
+                } else {
+                    await authenticate(); // Wenn der Token ungültig ist, erneut authentifizieren
+                }
             } else {
-                await authenticate();
+                await authenticate(); // Falls kein Token vorhanden ist, muss der Benutzer sich anmelden
             }
         };
 
-        if (!token) checkToken();
+        checkToken();
     }, [token, authenticate, validateToken]);
 
     useEffect(() => {
