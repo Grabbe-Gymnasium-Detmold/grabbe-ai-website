@@ -20,31 +20,27 @@ const ChatPage: React.FC = () => {
     const [messages, setMessages] = useState<{ id: number; text: string; user: "You" | "Bot" }[]>([]);
     const [isBotResponding, setIsBotResponding] = useState<boolean>(false);
     const [showExampleCards, setShowExampleCards] = useState<boolean>(true);
-    const inputRef = useRef<HTMLInputElement>(null);
-    const [token, setToken] = useState<string | null>(null);
-    const [threadId, setThreadId] = useState<string | null>(null);
-    const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
     const [inputText, setInputText] = useState<string>("");
     const [exampleQuestions, setExampleQuestions] = useState<string[]>([""]);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [token, setToken] = useState<string | null>(localStorage.getItem("session_token"));
+    const [threadId, setThreadId] = useState<string | null>(null);
+    const [isDarkMode, setIsDarkMode] = useState<boolean>(localStorage.getItem("theme") === "dark");
+
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const MAX_CHARACTERS = 150;
 
     const authenticate = useCallback(async () => {
         try {
-            const authResponse = await fetch(AUTH_URL, {
-                method: "GET",
-                headers: { "Content-Type": "application/json" },
-            });
+            const authResponse = await fetch(AUTH_URL, { method: "GET", headers: { "Content-Type": "application/json" } });
+            if (!authResponse.ok) throw new Error("Authentication failed.");
 
-            if (!authResponse.ok) {
-                throw new Error("Authentication failed.");
-            }
-
-            const authData = await authResponse.json();
-            localStorage.setItem("session_token", authData.token);
-            setToken(authData.token);
+            const { token: authToken } = await authResponse.json();
+            localStorage.setItem("session_token", authToken);
+            setToken(authToken);
         } catch (error) {
+            console.error(error);
             setErrorMessage("Es gab ein Problem bei der Anmeldung. Bitte versuche es später noch einmal.");
         }
     }, []);
@@ -58,13 +54,10 @@ const ChatPage: React.FC = () => {
                     Authorization: `Bearer ${storedToken}`,
                 },
             });
-
-            if (!response.ok) {
-                throw new Error("Token validation failed.");
-            }
-
+            if (!response.ok) throw new Error("Token validation failed.");
             return true;
         } catch (error) {
+            console.error(error);
             setErrorMessage("Es gab ein Problem mit deinem Login. Bitte melde dich erneut an.");
             return false;
         }
@@ -73,27 +66,19 @@ const ChatPage: React.FC = () => {
     useEffect(() => {
         const checkToken = async () => {
             const storedToken = localStorage.getItem("session_token");
-
-            if (storedToken) {
-                const isValid = await validateToken(storedToken);
-                if (isValid) {
-                    setToken(storedToken);
-                    return;
-                }
-
-                localStorage.removeItem("session_token");
+            if (storedToken && await validateToken(storedToken)) {
+                setToken(storedToken);
+            } else {
+                await authenticate();
             }
-
-            await authenticate();
         };
 
-        checkToken();
-    }, [authenticate, validateToken]);
+        if (!token) checkToken();
+    }, [token, authenticate, validateToken]);
 
     useEffect(() => {
         const fetchExampleQuestions = async () => {
             if (!token) return;
-
             try {
                 const cachedQuestions = localStorage.getItem("example_questions");
                 if (cachedQuestions) {
@@ -103,20 +88,15 @@ const ChatPage: React.FC = () => {
 
                 const qResponse = await fetch(EXAMPLE_QUESTION_URL, {
                     method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
+                    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
                 });
-
-                if (!qResponse.ok) {
-                    throw new Error("Fetching example questions failed.");
-                }
+                if (!qResponse.ok) throw new Error("Fetching example questions failed.");
 
                 const { questions } = await qResponse.json();
                 localStorage.setItem("example_questions", JSON.stringify(questions));
                 setExampleQuestions(questions);
             } catch (error) {
+                console.error(error);
                 setErrorMessage("Es konnte keine Verbindung zu den Beispiel-Fragen hergestellt werden. Bitte versuche es später erneut.");
             }
         };
@@ -134,10 +114,72 @@ const ChatPage: React.FC = () => {
         document.documentElement.classList.toggle("dark", isDarkMode);
     }, [isDarkMode]);
 
-    const toggleDarkMode = () => setIsDarkMode((prevMode) => !prevMode);
+    const toggleDarkMode = () => setIsDarkMode(prevMode => !prevMode);
 
-    const handleThumbsUp = (id: number) => console.log("Thumbs Up for message", id);
-    const handleThumbsDown = (id: number) => console.log("Thumbs Down for message", id);
+    const handleSend = async (): Promise<void> => {
+        if (!inputText.trim() || isBotResponding || inputText.length > MAX_CHARACTERS) return;
+
+        setIsBotResponding(true);
+        setShowExampleCards(false);
+        const userMessage = { id: Date.now(), text: inputText.trim(), user: "You" as const };
+        setMessages(prev => [...prev, userMessage]);
+        setInputText("");
+
+        let currentThreadId = threadId;
+        if (!currentThreadId) {
+            currentThreadId = await createThread();
+            if (!currentThreadId) {
+                setMessages(prev => [...prev, { id: Date.now(), text: "Error creating thread. Please try again later.", user: "Bot" as const }]);
+                setIsBotResponding(false);
+                return;
+            }
+            setThreadId(currentThreadId);
+        }
+
+        const botMessageId = Date.now() + 1;
+        setMessages(prev => [...prev, { id: botMessageId, text: "", user: "Bot" as const }]);
+
+        try {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "text/event-stream",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ question: userMessage.text, threadId: currentThreadId }),
+            });
+            if (!response.ok) throw new Error("Failed to fetch bot response.");
+
+            const reader = response.body?.getReader();
+            if (!reader) throw new Error("ReadableStream reader is undefined.");
+
+            const decoder = new TextDecoder();
+            let done = false;
+            let botMessageText = "";
+
+            while (!done) {
+                const { value, done: readerDone } = await reader.read();
+                done = readerDone;
+                const chunk = decoder.decode(value, { stream: true });
+                botMessageText += chunk;
+
+                setMessages(prev => prev.map(msg => msg.id === botMessageId ? { ...msg, text: botMessageText } : msg));
+            }
+        } catch (error: unknown) {
+            setMessages(prev => [...prev, { id: Date.now(), text: error instanceof Error ? `Error: ${error.message}` : "Unknown error occurred.", user: "Bot" as const }]);
+        } finally {
+            setIsBotResponding(false);
+        }
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        if (value.length <= MAX_CHARACTERS) {
+            setInputText(value);
+        }
+    };
+
     const createThread = async (): Promise<string | null> => {
         if (!token) return null;
 
@@ -149,133 +191,38 @@ const ChatPage: React.FC = () => {
                     Authorization: `Bearer ${token}`,
                 },
             });
-
-            if (!threadResponse.ok) {
-                console.error("Thread creation failed.");
-                return null;
-            }
+            if (!threadResponse.ok) return null;
 
             const threadData = await threadResponse.json();
             return threadData.threadId;
         } catch (error) {
-            console.error("Error creating thread:", error);
+            console.error(error);
             return null;
         }
     };
-
-    const handleSend = async (): Promise<void> => {
-        if (!inputText.trim() || isBotResponding || !token || inputText.length > MAX_CHARACTERS) return;
-
-        setIsBotResponding(true);
-        setShowExampleCards(false);
-
-        const userMessage = {
-            id: Date.now(),
-            text: inputText.trim(),
-            user: "You" as const,
-        };
-
-        setMessages((prev) => [...prev, userMessage]);
-        setInputText(""); // Clear the input field
-
-        let currentThreadId = threadId;
-        if (!currentThreadId) {
-            currentThreadId = await createThread();
-            if (!currentThreadId) {
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        id: Date.now(),
-                        text: "Error creating thread. Please try again later.",
-                        user: "Bot" as const,
-                    },
-                ]);
-                setIsBotResponding(false);
-                return;
-            }
-            setThreadId(currentThreadId);
-        }
-
-        const botMessageId = Date.now() + 1;
-        setMessages((prev) => [...prev, {id: botMessageId, text: "", user: "Bot" as const}]);
-
-        try {
-            const response = await fetch(API_URL, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "text/event-stream",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    question: userMessage.text,
-                    threadId: currentThreadId,
-                }),
-            });
-
-            if (!response.ok) {
-                throw new Error("Failed to fetch bot response.");
-            }
-
-            const reader = response.body?.getReader();
-            if (!reader) {
-                throw new Error("ReadableStream reader is undefined.");
-            }
-
-            const decoder = new TextDecoder();
-            let done = false;
-            let botMessageText = "";
-
-            while (!done) {
-                const {value, done: readerDone} = await reader.read();
-                done = readerDone;
-
-                const chunk = decoder.decode(value, {stream: true});
-                botMessageText += chunk;
-
-                setMessages((prev) =>
-                    prev.map((msg) =>
-                        msg.id === botMessageId ? {...msg, text: botMessageText} : msg
-                    )
-                );
-            }
-        } catch (error: unknown) {
-            setMessages((prev) => [
-                ...prev,
-                {
-                    id: Date.now(),
-                    text: error instanceof Error ? `Error: ${error.message}` : "Unknown error occurred.",
-                    user: "Bot" as const,
-                },
-            ]);
-        } finally {
-            setIsBotResponding(false);
-        }
-    };
-
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        if (value.length <= MAX_CHARACTERS) {
-            setInputText(value);
-        }
-    };
+    function handleThumbsUp(messageId: number) {
+        console.log(messageId);
+    }
+    function handleThumbsDown(messageId: number) {
+        console.log(messageId);
+    }
 
     return (
         <div className="bg-white text-gray-800 flex justify-center items-center min-h-screen dark:bg-gray-800">
             <div className="bg-white text-gray-800 dark:bg-gray-800 dark:text-white">
-                <div className={`p-4 ${isDarkMode ? "bg-gray-800 text-white" : "bg-white text-black"}`}>
+                <div className="p-4 dark:bg-gray-800 dark:text-white bg-white text-black">
                     {errorMessage && (
-                        <div className="mb-4 p-3 border-l-4 border-red-500 bg-red-100 text-red-800 rounded">
+                        <div
+                            className="mb-4 p-3 border-l-4 border-red-500 bg-red-100 text-red-800 rounded dark:bg-red-900 dark:text-red-300">
                             {errorMessage}
                         </div>
                     )}
-
                 </div>
+
                 <div>
                     <button
                         onClick={toggleDarkMode}
-                        className={`p-1 w-16 h-8 flex items-center rounded-full float-right transition-all duration-300 ${
+                        className={`p-1 w-16 h-8 flex items-center rounded-full float-right transition-all duration-300  ${
                             isDarkMode ? "bg-gray-700" : "bg-yellow-400"
 
                         }`}
