@@ -58,10 +58,11 @@ const ChatPage: React.FC = () => {
             return true;
         } catch (error) {
             console.error(error);
-            setErrorMessage("Es gab ein Problem mit deinem Login. Bitte melde dich erneut an.");
+            setErrorMessage("Es gab ein Problem mit deinem Login. Ein neuer Token wird angefordert...");
+            await authenticate(); // Neuen Token anfordern, wenn der aktuelle ungültig ist
             return false;
         }
-    }, []);
+    }, [authenticate]);
 
 
     useEffect(() => {
