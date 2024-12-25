@@ -229,6 +229,7 @@ const ChatPage: React.FC = () => {
                 <div>
                     <button
                         onClick={toggleDarkMode}
+                        aria-label="Dark Mode umschalten"
                         className={`p-1 w-16 h-8 flex items-center rounded-full float-right transition-all duration-300  ${
                             isDarkMode ? "bg-gray-700" : "bg-yellow-400"
 
