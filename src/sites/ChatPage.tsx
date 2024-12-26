@@ -198,7 +198,11 @@ const ChatPage: React.FC = () => {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            if (!threadResponse.ok) return null;
+            if (!threadResponse.ok){
+                console.error("Failed to create thread.");
+                setErrorMessage("Die erstellung eines neuen chats ist Fehlgeschlagen. Bitte versuche es später erneut.");
+                return null;
+            }
 
             const threadData = await threadResponse.json();
             return threadData.threadId;
