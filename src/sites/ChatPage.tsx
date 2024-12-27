@@ -210,6 +210,7 @@ const ChatPage: React.FC = () => {
     };
 
     const handleEvaluation = async (messageId: number, evaluation: "positive" | "negative") => {
+        console.log("evaluation");
         if (!threadId || !token) return;
 
         try {
@@ -391,10 +392,10 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                                     <div
                                         className="absolute transform translate-x-4 translate-y-4 opacity-0 group-hover:opacity-100 flex space-x-2">
                                         <FaThumbsUp
-                                            onClick={() => () => handleEvaluation(msg.id, "positive")}
+                                            onClick={() => handleEvaluation(msg.id, "positive")}
                                             className="text-lg text-green-500 cursor-pointer hover:scale-110 transition-transform duration-300"/>
                                         <FaThumbsDown
-                                            onClick={() => () => handleEvaluation(msg.id, "negative")}
+                                            onClick={() => handleEvaluation(msg.id, "negative")}
                                             className="text-lg text-red-500 cursor-pointer hover:scale-110 transition-transform duration-300"/>
                                     </div>
                                 </div>
