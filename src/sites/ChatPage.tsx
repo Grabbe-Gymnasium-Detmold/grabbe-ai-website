@@ -15,6 +15,7 @@ const AUTH_URL = "https://api.grabbe.site/auth";
 const THREAD_URL = "https://api.grabbe.site/thread/create";
 const EXAMPLE_QUESTION_URL = "https://api.grabbe.site/examples";
 const CHECK_TOKEN_URL = "https://api.grabbe.site/auth/check";
+const EVALUATION_URL = "https://api.grabbe.site/evaluation";
 
 const ChatPage: React.FC = () => {
     const [messages, setMessages] = useState<{ id: number; text: string; user: "You" | "Bot" }[]>([]);
@@ -55,13 +56,11 @@ const ChatPage: React.FC = () => {
                 },
             });
             return response.ok;
-
         } catch (error) {
             console.error(error);
             return false;
         }
     }, [authenticate]);
-
 
     useEffect(() => {
         const checkToken = async () => {
@@ -71,10 +70,10 @@ const ChatPage: React.FC = () => {
                 if (isValid) {
                     setToken(storedToken);
                 } else {
-                    await authenticate(); // Wenn der Token ungültig ist, erneut authentifizieren
+                    await authenticate();
                 }
             } else {
-                await authenticate(); // Falls kein Token vorhanden ist, muss der Benutzer sich anmelden
+                await authenticate();
             }
         };
 
@@ -196,9 +195,9 @@ const ChatPage: React.FC = () => {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            if (!threadResponse.ok){
+            if (!threadResponse.ok) {
                 console.error("Failed to create thread.");
-                setErrorMessage("Die erstellung eines neuen chats ist Fehlgeschlagen. Bitte versuche es später erneut.");
+                setErrorMessage("Die Erstellung eines neuen Chats ist fehlgeschlagen. Bitte versuche es später erneut.");
                 return null;
             }
 
@@ -209,12 +208,31 @@ const ChatPage: React.FC = () => {
             return null;
         }
     };
-    function handleThumbsUp(messageId: number) {
-        console.log(messageId);
-    }
-    function handleThumbsDown(messageId: number) {
-        console.log(messageId);
-    }
+
+    const handleEvaluation = async (messageId: number, evaluation: "positive" | "negative") => {
+        if (!threadId || !token) return;
+
+        try {
+            const response = await fetch(EVALUATION_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ threadId, messageId, evaluation }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to send evaluation.");
+            }
+
+            console.log(`Evaluation submitted: Message ID ${messageId}, Evaluation: ${evaluation}`);
+        } catch (error) {
+            console.error(error);
+            setErrorMessage("Die Bewertung konnte nicht gesendet werden. Bitte versuche es später erneut.");
+        }
+    };
+
 
     return (
         <div className="bg-white text-gray-800 flex justify-center items-center min-h-screen dark:bg-gray-800">
@@ -373,10 +391,10 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                                     <div
                                         className="absolute transform translate-x-4 translate-y-4 opacity-0 group-hover:opacity-100 flex space-x-2">
                                         <FaThumbsUp
-                                            onClick={() => handleThumbsUp(msg.id)}
+                                            onClick={() => () => handleEvaluation(msg.id, "positive")}
                                             className="text-lg text-green-500 cursor-pointer hover:scale-110 transition-transform duration-300"/>
                                         <FaThumbsDown
-                                            onClick={() => handleThumbsDown(msg.id)}
+                                            onClick={() => () => handleEvaluation(msg.id, "negative")}
                                             className="text-lg text-red-500 cursor-pointer hover:scale-110 transition-transform duration-300"/>
                                     </div>
                                 </div>
