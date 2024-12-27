@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, {useState, useRef, useEffect, useCallback} from "react";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
@@ -6,9 +6,9 @@ import rehypeHighlight from "rehype-highlight";
 import "katex/dist/katex.css";
 import "highlight.js/styles/github-dark.min.css";
 import Markdown from "react-markdown";
-import { BlueLink } from "@/components/BlueLink.tsx";
+import {BlueLink} from "@/components/BlueLink.tsx";
 import rehypeSemanticBlockquotes from "rehype-semantic-blockquotes";
-import { FaThumbsDown, FaThumbsUp } from "react-icons/fa";
+import {FaThumbsDown, FaThumbsUp} from "react-icons/fa";
 
 const API_URL = "https://api.grabbe.site/chat";
 const AUTH_URL = "https://api.grabbe.site/auth";
@@ -18,7 +18,7 @@ const CHECK_TOKEN_URL = "https://api.grabbe.site/auth/check";
 const EVALUATION_URL = "https://api.grabbe.site/evaluation";
 
 const ChatPage: React.FC = () => {
-    const [messages, setMessages] = useState<{ id: number; text: string; user: "You" | "Bot" }[]>([]);
+    const [messages, setMessages] = useState<{ id: number; text: string; user: "You" | "Bot", evaluation: string }[]>([]);
     const [isBotResponding, setIsBotResponding] = useState<boolean>(false);
     const [showExampleCards, setShowExampleCards] = useState<boolean>(true);
     const [inputText, setInputText] = useState<string>("");
@@ -34,10 +34,10 @@ const ChatPage: React.FC = () => {
 
     const authenticate = useCallback(async () => {
         try {
-            const authResponse = await fetch(AUTH_URL, { method: "GET", headers: { "Content-Type": "application/json" } });
+            const authResponse = await fetch(AUTH_URL, {method: "GET", headers: {"Content-Type": "application/json"}});
             if (!authResponse.ok) throw new Error("Authentication failed.");
 
-            const { token: authToken } = await authResponse.json();
+            const {token: authToken} = await authResponse.json();
             localStorage.setItem("session_token", authToken);
             setToken(authToken);
         } catch (error) {
@@ -92,11 +92,11 @@ const ChatPage: React.FC = () => {
 
                 const qResponse = await fetch(EXAMPLE_QUESTION_URL, {
                     method: "GET",
-                    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                    headers: {"Content-Type": "application/json", Authorization: `Bearer ${token}`},
                 });
                 if (!qResponse.ok) throw new Error("Fetching example questions failed.");
 
-                const { questions } = await qResponse.json();
+                const {questions} = await qResponse.json();
                 localStorage.setItem("example_questions", JSON.stringify(questions));
                 setExampleQuestions(questions);
             } catch (error) {
@@ -125,7 +125,7 @@ const ChatPage: React.FC = () => {
 
         setIsBotResponding(true);
         setShowExampleCards(false);
-        const userMessage = { id: Date.now(), text: inputText.trim(), user: "You" as const };
+        const userMessage = {id: Date.now(), text: inputText.trim(), user: "You" as const, evaluation: "null"};
         setMessages(prev => [...prev, userMessage]);
         setInputText("");
 
@@ -133,7 +133,12 @@ const ChatPage: React.FC = () => {
         if (!currentThreadId) {
             currentThreadId = await createThread();
             if (!currentThreadId) {
-                setMessages(prev => [...prev, { id: Date.now(), text: "Error creating thread. Please try again later.", user: "Bot" as const }]);
+                setMessages(prev => [...prev, {
+                    id: Date.now(),
+                    text: "Error creating thread. Please try again later.",
+                    user: "Bot" as const,
+                    evaluation: "null"
+                }]);
                 setIsBotResponding(false);
                 return;
             }
@@ -141,7 +146,7 @@ const ChatPage: React.FC = () => {
         }
 
         const botMessageId = Date.now() + 1;
-        setMessages(prev => [...prev, { id: botMessageId, text: "", user: "Bot" as const }]);
+        setMessages(prev => [...prev, {id: botMessageId, text: "", user: "Bot" as const, evaluation: "null"}]);
 
         try {
             const response = await fetch(API_URL, {
@@ -151,7 +156,7 @@ const ChatPage: React.FC = () => {
                     Accept: "text/event-stream",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ question: userMessage.text, threadId: currentThreadId }),
+                body: JSON.stringify({question: userMessage.text, threadId: currentThreadId}),
             });
             if (!response.ok) throw new Error("Failed to fetch bot response.");
 
@@ -163,15 +168,26 @@ const ChatPage: React.FC = () => {
             let botMessageText = "";
 
             while (!done) {
-                const { value, done: readerDone } = await reader.read();
+                const {value, done: readerDone} = await reader.read();
                 done = readerDone;
-                const chunk = decoder.decode(value, { stream: true });
-                botMessageText += chunk;
+                const chunk = decoder.decode(value, {stream: true});
+                if(chunk.startsWith('{"done":true,')){
+                    const {messageId} = JSON.parse(chunk);
+                    setMessages(prev => prev.map(msg => msg.id === botMessageId ? {...msg, id: messageId} : msg));
+                }else{
+                    botMessageText += chunk;
+                    setMessages(prev => prev.map(msg => msg.id === botMessageId ? {...msg, text: botMessageText} : msg));
+                }
 
-                setMessages(prev => prev.map(msg => msg.id === botMessageId ? { ...msg, text: botMessageText } : msg));
             }
+
         } catch (error: unknown) {
-            setMessages(prev => [...prev, { id: Date.now(), text: error instanceof Error ? `Error: ${error.message}` : "Unknown error occurred.", user: "Bot" as const }]);
+            setMessages(prev => [...prev, {
+                id: Date.now(),
+                text: error instanceof Error ? `Error: ${error.message}` : "Unknown error occurred.",
+                user: "Bot" as const,
+                evaluation: "null"
+            }]);
         } finally {
             setIsBotResponding(false);
         }
@@ -210,9 +226,8 @@ const ChatPage: React.FC = () => {
     };
 
     const handleEvaluation = async (messageId: number, evaluation: "positive" | "negative") => {
-        console.log("evaluation");
         if (!threadId || !token) return;
-
+        setMessages(prev => prev.map(msg => msg.id === messageId ? {...msg, evaluation} : msg));
         try {
             const response = await fetch(EVALUATION_URL, {
                 method: "POST",
@@ -220,14 +235,13 @@ const ChatPage: React.FC = () => {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ threadId, messageId, evaluation }),
+                body: JSON.stringify({threadId, messageId, evaluation}),
             });
 
             if (!response.ok) {
                 throw new Error("Failed to send evaluation.");
             }
 
-            console.log(`Evaluation submitted: Message ID ${messageId}, Evaluation: ${evaluation}`);
         } catch (error) {
             console.error(error);
             setErrorMessage("Die Bewertung konnte nicht gesendet werden. Bitte versuche es später erneut.");
@@ -389,17 +403,31 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                                     >
                                         {msg.text}
                                     </Markdown>
-                                    <div
-                                        className="absolute transform translate-x-4 translate-y-4 opacity-0 group-hover:opacity-100 flex space-x-2">
-                                        <FaThumbsUp
-                                            onClick={() => handleEvaluation(msg.id, "positive")}
-                                            className="text-lg text-green-500 cursor-pointer hover:scale-110 transition-transform duration-300"/>
-                                        <FaThumbsDown
-                                            onClick={() => handleEvaluation(msg.id, "negative")}
-                                            className="text-lg text-red-500 cursor-pointer hover:scale-110 transition-transform duration-300"/>
-                                    </div>
-                                </div>
+                                    {!isBotResponding && (
+                                        <div
+                                            className="absolute transform translate-x-4 translate-y-4 opacity-0 group-hover:opacity-100 flex space-x-2">
+                                            {msg.evaluation == "null" && (
+                                                <>
+                                                    <FaThumbsUp
+                                                        onClick={() => handleEvaluation(msg.id, "positive")}
+                                                        className="text-lg text-green-500 cursor-pointer hover:scale-110 transition-transform duration-300" />
+                                                    <FaThumbsDown
+                                                        onClick={() => handleEvaluation(msg.id, "negative")}
+                                                        className="text-lg text-red-500 cursor-pointer hover:scale-110 transition-transform duration-300" />
+                                                </>
+                                            )}
+                                            {msg.evaluation == "positive" && (
+                                                <FaThumbsUp
+                                                    className="text-lg text-green-500 cursor-default hover:scale-100 transition-none" />
+                                            )}
+                                            {msg.evaluation == "negative" && (
+                                                <FaThumbsDown
+                                                    className="text-lg text-red-500 cursor-default hover:scale-100 transition-none" />
+                                            )}
+                                        </div>
+                                    )}
 
+                                </div>
                             ))}
                         </div>
 
