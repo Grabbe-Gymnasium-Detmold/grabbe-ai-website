@@ -54,12 +54,10 @@ const ChatPage: React.FC = () => {
                     Authorization: `Bearer ${storedToken}`,
                 },
             });
-            if (!response.ok) throw new Error("Token validation failed.");
-            return true;
+            return response.ok;
+
         } catch (error) {
             console.error(error);
-            setErrorMessage("Es gab ein Problem mit deinem Login. Ein neuer Token wird angefordert...");
-            await authenticate(); // Neuen Token anfordern, wenn der aktuelle ungültig ist
             return false;
         }
     }, [authenticate]);
