@@ -9,7 +9,7 @@ import Markdown from "react-markdown";
 import {BlueLink} from "@/components/BlueLink.tsx";
 import rehypeSemanticBlockquotes from "rehype-semantic-blockquotes";
 import {FaThumbsDown, FaThumbsUp} from "react-icons/fa";
-
+import {useToast} from "@/components/Toast.tsx";
 const API_URL = "https://api.grabbe.site/chat";
 const AUTH_URL = "https://api.grabbe.site/auth";
 const THREAD_URL = "https://api.grabbe.site/thread/create";
@@ -27,8 +27,11 @@ const ChatPage: React.FC = () => {
     const [token, setToken] = useState<string | null>(localStorage.getItem("session_token"));
     const [threadId, setThreadId] = useState<string | null>(null);
     const [isDarkMode, setIsDarkMode] = useState<boolean>(localStorage.getItem("theme") === "dark");
+    const { addToast } = useToast();  // Verwende die Toast-Hook
+
 
     const inputRef = useRef<HTMLInputElement>(null);
+
 
     const MAX_CHARACTERS = 150;
 
@@ -241,10 +244,10 @@ const ChatPage: React.FC = () => {
             if (!response.ok) {
                 throw new Error("Failed to send evaluation.");
             }
-
+          addToast("Danke für deine Bewertung der Nachricht!", "success", 5);
         } catch (error) {
             console.error(error);
-            setErrorMessage("Die Bewertung konnte nicht gesendet werden. Bitte versuche es später erneut.");
+            addToast("Leider gab es einen Fehler beim senden der Bewertung. Tortzdem danke!", "success", 5);
         }
     };
 
@@ -493,6 +496,7 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                     </div>
                 </div>
             </div>
+
         </div>
     );
 };
