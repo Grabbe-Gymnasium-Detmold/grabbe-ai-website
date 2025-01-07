@@ -359,7 +359,7 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                                 )}
                             </div>
                         </button>
-                        <div className="logo mb-6 text-sm text-gray-500">Logo</div>
+                        
                         <div className="title text-2xl font-semibold mb-4">GrabbeAI</div>
                         <div className="subtitle text-base text-gray-600 mb-10">
                             Wobei kann ich dir heute helfen?
