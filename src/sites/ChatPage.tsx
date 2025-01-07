@@ -1,3 +1,5 @@
+// ChatPage.tsx
+
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -11,6 +13,10 @@ import rehypeSemanticBlockquotes from "rehype-semantic-blockquotes";
 import { FaThumbsDown, FaThumbsUp } from "react-icons/fa";
 import { useToast } from "@/components/Toast.tsx";
 
+// ========= LANGUAGE =========
+import i18next from "../lib/i18n"; // Pfad zu Ihrer i18n.ts Datei
+// =============================
+
 const API_URL = "https://api.grabbe.site/chat";
 const AUTH_URL = "https://api.grabbe.site/auth";
 const THREAD_URL = "https://api.grabbe.site/thread/create";
@@ -18,8 +24,15 @@ const EXAMPLE_QUESTION_URL = "https://api.grabbe.site/examples";
 const CHECK_TOKEN_URL = "https://api.grabbe.site/auth/check";
 const EVALUATION_URL = "https://api.grabbe.site/evaluation";
 
+interface Message {
+    id: number;
+    text: string;
+    user: "You" | "Bot";
+    evaluation: string;
+}
+
 const ChatPage: React.FC = () => {
-    const [messages, setMessages] = useState<{ id: number; text: string; user: "You" | "Bot", evaluation: string }[]>([]);
+    const [messages, setMessages] = useState<Message[]>([]);
     const [isBotResponding, setIsBotResponding] = useState<boolean>(false);
     const [showExampleCards, setShowExampleCards] = useState<boolean>(true);
     const [inputText, setInputText] = useState<string>("");
@@ -27,7 +40,9 @@ const ChatPage: React.FC = () => {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [token, setToken] = useState<string | null>(localStorage.getItem("session_token"));
     const [threadId, setThreadId] = useState<string | null>(null);
-    const [isDarkMode, setIsDarkMode] = useState<boolean>(localStorage.getItem("theme") === "dark");
+    const [isDarkMode, setIsDarkMode] = useState<boolean>(
+        localStorage.getItem("theme") === "dark"
+    );
     const { addToast } = useToast();
 
     const inputRef = useRef<HTMLInputElement>(null);
@@ -35,25 +50,26 @@ const ChatPage: React.FC = () => {
     const MAX_CHARACTERS = 150;
 
     // ========= LANGUAGE =========
-    const [language, setLanguage] = useState<string>('en');
+    const [language, setLanguage] = useState<string>(i18next.language || 'en');
 
-    const translations: { [key: string]: { [key: string]: string } } = {
-        en: {
-            subtitle: "How can I help you today?",
-        },
-        de: {
-            subtitle: "Wobei kann ich dir heute helfen?",
-        }
+    const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedLanguage = e.target.value;
+        setLanguage(selectedLanguage);
+        i18next.changeLanguage(selectedLanguage);
     };
 
-    const t = (key: string): string => {
-        return translations[language][key] || key;
+    // Übersetzungsfunktion
+    const t = (key: string, options?: Record<string, unknown>): string => {
+        return i18next.t(key, options) as string;
     };
     // =============================
 
     const authenticate = useCallback(async () => {
         try {
-            const authResponse = await fetch(AUTH_URL, { method: "GET", headers: { "Content-Type": "application/json" } });
+            const authResponse = await fetch(AUTH_URL, {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+            });
             if (!authResponse.ok) throw new Error("Authentication failed.");
 
             const { token: authToken } = await authResponse.json();
@@ -61,9 +77,9 @@ const ChatPage: React.FC = () => {
             setToken(authToken);
         } catch (error) {
             console.error(error);
-            setErrorMessage("Es gab ein Problem bei der Anmeldung. Bitte versuche es später noch einmal.");
+            setErrorMessage(t("error_authentication"));
         }
-    }, []);
+    }, [t]);
 
     const validateToken = useCallback(async (storedToken: string): Promise<boolean> => {
         try {
@@ -97,7 +113,7 @@ const ChatPage: React.FC = () => {
         };
 
         checkToken();
-    }, [authenticate, validateToken]); // Entfernt 'token' aus den Abhängigkeiten, um Endlosschleifen zu vermeiden
+    }, [authenticate, validateToken]);
 
     useEffect(() => {
         const fetchExampleQuestions = async () => {
@@ -105,32 +121,39 @@ const ChatPage: React.FC = () => {
             try {
                 const cachedQuestions = localStorage.getItem("example_questions");
                 if (cachedQuestions) {
-                    const parsedQuestions = JSON.parse(cachedQuestions);
+                    const parsedQuestions: string[] = JSON.parse(cachedQuestions);
                     setExampleQuestions(shuffleAndSlice(parsedQuestions, 4));
                     return;
                 }
 
                 const qResponse = await fetch(EXAMPLE_QUESTION_URL, {
                     method: "GET",
-                    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
                 });
                 if (!qResponse.ok) throw new Error("Fetching example questions failed.");
 
-                const { questions } = await qResponse.json();
+                const { questions }: { questions: string[] } = await qResponse.json();
                 localStorage.setItem("example_questions", JSON.stringify(questions));
                 setExampleQuestions(shuffleAndSlice(questions, 4));
             } catch (error) {
                 console.error(error);
-                setErrorMessage("Es konnte keine Verbindung zu den Beispiel-Fragen hergestellt werden. Bitte versuche es später erneut.");
+                setErrorMessage(t("error_fetch_example_questions"));
             }
         };
 
         fetchExampleQuestions();
-    }, [token]);
+    }, [token, t]);
 
     useEffect(() => {
         const savedTheme = localStorage.getItem("theme");
-        setIsDarkMode(savedTheme === "dark" || (savedTheme === null && window.matchMedia("(prefers-color-scheme: dark)").matches));
+        setIsDarkMode(
+            savedTheme === "dark" ||
+            (savedTheme === null &&
+                window.matchMedia("(prefers-color-scheme: dark)").matches)
+        );
     }, []);
 
     useEffect(() => {
@@ -138,10 +161,10 @@ const ChatPage: React.FC = () => {
         document.documentElement.classList.toggle("dark", isDarkMode);
     }, [isDarkMode]);
 
-    const toggleDarkMode = () => setIsDarkMode(prevMode => !prevMode);
+    const toggleDarkMode = () => setIsDarkMode((prevMode) => !prevMode);
 
     const shuffleAndSlice = (array: string[], count: number): string[] => {
-        const shuffled = array.sort(() => 0.5 - Math.random());
+        const shuffled = [...array].sort(() => 0.5 - Math.random());
         return shuffled.slice(0, count);
     };
 
@@ -150,20 +173,28 @@ const ChatPage: React.FC = () => {
 
         setIsBotResponding(true);
         setShowExampleCards(false);
-        const userMessage = { id: Date.now(), text: inputText.trim(), user: "You" as const, evaluation: "null" };
-        setMessages(prev => [...prev, userMessage]);
+        const userMessage: Message = {
+            id: Date.now(),
+            text: inputText.trim(),
+            user: "You",
+            evaluation: "null",
+        };
+        setMessages((prev) => [...prev, userMessage]);
         setInputText("");
 
         let currentThreadId = threadId;
         if (!currentThreadId) {
             currentThreadId = await createThread();
             if (!currentThreadId) {
-                setMessages(prev => [...prev, {
-                    id: Date.now(),
-                    text: "Error creating thread. Please try again later.",
-                    user: "Bot" as const,
-                    evaluation: "null"
-                }]);
+                setMessages((prev) => [
+                    ...prev,
+                    {
+                        id: Date.now(),
+                        text: t("error_create_thread"),
+                        user: "Bot",
+                        evaluation: "null",
+                    },
+                ]);
                 setIsBotResponding(false);
                 return;
             }
@@ -171,7 +202,10 @@ const ChatPage: React.FC = () => {
         }
 
         const botMessageId = Date.now() + 1;
-        setMessages(prev => [...prev, { id: botMessageId, text: "", user: "Bot" as const, evaluation: "null" }]);
+        setMessages((prev) => [
+            ...prev,
+            { id: botMessageId, text: "", user: "Bot", evaluation: "null" },
+        ]);
 
         try {
             const response = await fetch(API_URL, {
@@ -181,12 +215,15 @@ const ChatPage: React.FC = () => {
                     Accept: "text/event-stream",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ question: userMessage.text, threadId: currentThreadId }),
+                body: JSON.stringify({
+                    question: userMessage.text,
+                    threadId: currentThreadId,
+                }),
             });
-            if (!response.ok) throw new Error("Failed to fetch bot response.");
+            if (!response.ok) throw new Error(t("error_fetch_bot_response"));
 
             const reader = response.body?.getReader();
-            if (!reader) throw new Error("ReadableStream reader is undefined.");
+            if (!reader) throw new Error(t("error_fetch_bot_response"));
 
             const decoder = new TextDecoder();
             let done = false;
@@ -198,20 +235,33 @@ const ChatPage: React.FC = () => {
                 const chunk = decoder.decode(value, { stream: true });
                 if (chunk.startsWith('{"done":true,')) {
                     const { messageId } = JSON.parse(chunk);
-                    setMessages(prev => prev.map(msg => msg.id === botMessageId ? { ...msg, id: messageId } : msg));
+                    setMessages((prev) =>
+                        prev.map((msg) =>
+                            msg.id === botMessageId ? { ...msg, id: messageId } : msg
+                        )
+                    );
                 } else {
                     botMessageText += chunk;
-                    setMessages(prev => prev.map(msg => msg.id === botMessageId ? { ...msg, text: botMessageText } : msg));
+                    setMessages((prev) =>
+                        prev.map((msg) =>
+                            msg.id === botMessageId ? { ...msg, text: botMessageText } : msg
+                        )
+                    );
                 }
             }
-
         } catch (error: unknown) {
-            setMessages(prev => [...prev, {
-                id: Date.now(),
-                text: error instanceof Error ? `Error: ${error.message}` : "Unknown error occurred.",
-                user: "Bot" as const,
-                evaluation: "null"
-            }]);
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: Date.now(),
+                    text:
+                        error instanceof Error
+                            ? `Error: ${error.message}`
+                            : "Unknown error occurred.",
+                    user: "Bot",
+                    evaluation: "null",
+                },
+            ]);
         } finally {
             setIsBotResponding(false);
         }
@@ -237,7 +287,7 @@ const ChatPage: React.FC = () => {
             });
             if (!threadResponse.ok) {
                 console.error("Failed to create thread.");
-                setErrorMessage("Die Erstellung eines neuen Chats ist fehlgeschlagen. Bitte versuche es später erneut.");
+                setErrorMessage(t("error_create_thread"));
                 return null;
             }
 
@@ -245,13 +295,21 @@ const ChatPage: React.FC = () => {
             return threadData.threadId;
         } catch (error) {
             console.error(error);
+            setErrorMessage(t("error_create_thread"));
             return null;
         }
     };
 
-    const handleEvaluation = async (messageId: number, evaluation: "positive" | "negative") => {
+    const handleEvaluation = async (
+        messageId: number,
+        evaluation: "positive" | "negative"
+    ) => {
         if (!threadId || !token) return;
-        setMessages(prev => prev.map(msg => msg.id === messageId ? { ...msg, evaluation } : msg));
+        setMessages((prev) =>
+            prev.map((msg) =>
+                msg.id === messageId ? { ...msg, evaluation } : msg
+            )
+        );
         try {
             const response = await fetch(EVALUATION_URL, {
                 method: "POST",
@@ -263,20 +321,14 @@ const ChatPage: React.FC = () => {
             });
 
             if (!response.ok) {
-                throw new Error("Failed to send evaluation.");
+                throw new Error(t("evaluation_error"));
             }
-            addToast("Danke für deine Bewertung der Nachricht!", "success", 5);
+            addToast(t("evaluation_thanks_positive"), "success", 5);
         } catch (error) {
             console.error(error);
-            addToast("Leider gab es einen Fehler beim Senden der Bewertung. Trotzdem danke!", "error", 5);
+            addToast(t("evaluation_error"), "error", 5);
         }
     };
-
-    // ========= LANGUAGE =========
-    const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setLanguage(e.target.value);
-    };
-    // =============================
 
     return (
         <div className="bg-white text-gray-800 flex justify-center items-center min-h-screen dark:bg-gray-800">
@@ -284,7 +336,9 @@ const ChatPage: React.FC = () => {
                 <div className="p-4 dark:bg-gray-800 dark:text-white bg-white text-black">
                     {errorMessage && (
                         <div
-                            className="mb-4 p-3 border-l-4 border-red-500 bg-red-100 text-red-800 rounded dark:bg-red-900 dark:text-red-300">
+                            className="mb-4 p-3 border-l-4 border-red-500 bg-red-100 text-red-800 rounded dark:bg-red-900 dark:text-red-300"
+                            role="alert"
+                        >
                             {errorMessage}
                         </div>
                     )}
@@ -294,8 +348,8 @@ const ChatPage: React.FC = () => {
                     <div className="container mx-auto max-w-xl p-10 flex flex-col items-center relative">
                         <button
                             onClick={toggleDarkMode}
-                            aria-label="Dark Mode umschalten"
-                            className={`absolute top-4 right-4 p-1 w-16 h-8 flex items-center rounded-full transition-all duration-300  ${
+                            aria-label={t("dark_mode_toggle_label")}
+                            className={`absolute top-4 right-4 p-1 w-16 h-8 flex items-center rounded-full transition-all duration-300 ${
                                 isDarkMode ? "bg-gray-700" : "bg-yellow-400"
                             }`}
                         >
@@ -311,63 +365,51 @@ const ChatPage: React.FC = () => {
                                         fill="currentColor"
                                         className="w-6 h-6 text-yellow-400"
                                     >
-                                        <path
-                                            d="M21.75 12a9.75 9.75 0 11-10.61-9.737 0.75 0.75 0 01.861.818 0.75 0.75 0 01-.033.268 7.5 7.5 0 109.423 9.423 0.75 0.75 0 01.268-.033 0.75 0.75 0 01.818.861A9.742 9.742 0 0121.75 12z"/>
+                                        <path d="M21.75 12a9.75 9.75 0 11-10.61-9.737 0.75 0.75 0 01.861.818 0.75 0.75 0 01-.033.268 7.5 7.5 0 109.423 9.423 0.75 0.75 0 01.268-.033 0.75 0.75 0 01.818.861A9.742 9.742 0 0121.75 12z" />
                                     </svg>
                                 ) : (
-                                    <svg version="1.0" xmlns="http://www.w3.org/2000/svg"
-                                         className={`w-6 h-6 text-yellow-400`}
-                                         width="1280.000000pt" height="1219.000000pt"
-                                         viewBox="0 0 1280.000000 1219.000000"
-                                         preserveAspectRatio="xMidYMid meet">
-
-                                        <g transform="translate(0.000000,1219.000000) scale(0.100000,-0.100000)"
-                                           fill="#000000" stroke="none">
-                                            <path d="M6235 12171 c-44 -26 -61 -49 -94 -121 -74 -165 -108 -411 -156
--1110 -21 -309 -40 -462 -66 -535 -30 -83 -36 -226 -15 -330 24 -122 102 -271
-186 -354 178 -178 382 -181 566 -9 57 54 66 68 88 137 13 42 34 132 46 201 21
-116 23 166 30 695 6 491 10 580 25 645 23 100 23 273 0 360 -59 224 -226 372
--480 425 -93 19 -94 19 -130 -4z"/>
-                                            <path d="M2686 11408 c-137 -18 -269 -116 -329 -245 -29 -63 -31 -77 -32 -173
-0 -181 -45 -122 834 -1100 564 -627 776 -856 821 -887 84 -59 149 -76 269 -71
-83 3 105 8 164 37 229 110 315 388 184 598 -18 28 -373 432 -790 897 -603 672
--770 853-815 881 -92 57 -193 78 -306 63z"/>
-                                            <path d="M9974 11222 c-238 -156 -506 -450 -918 -1005 -218 -295 -424 -589 -850
--416 -250 -110 -277 -128 -340 -222 -54 -82 -73 -153 -68 -259 8 -231 1 -277 63
--339 33 -33 52 -42 127 -60 286 -66 674 -93 1544 -107 372 -6 433 -4 488 10 115
-29 208 107 265 221 38 76 50 136 45 233 -3 75 -9 97 -38 155 -56 105 -158 182
--287 218 -97 27 -1134 42 -1543 23z"/>
-                                            <path d="M11915 8759 c-224 -12 -444 -54 -1005 -194 -548 -137 -868 -224 -917
--248 -190 -97 -280 -327 -204 -526 44 -115 160 -223 279 -257 109 -32 159 -25
-707 100 904 207 1140 273 1372 386 132 65 164 96 263 263 36 61 35 152 -3 227
--25 49 -103 154 -173 233 -27 31 -40 31 -319 16z"/>
-                                            <path d="M895 9350 c-80 -21 -272 -116 -285 -140 -20 -38 -42 -186 -38 -255 8
--117 54 -185 168 -248 25 -13 99 -57 165 -97 66 -41 206 -115 310 -166 116 -68
-265 -156 333 -194 376 -213 637 -293 828 -254 91 18 186 61 237 105 83 73 126
-234 106 392 -29 231 -190 336 -1284 836 -293 135 -402 175 -1159 434 -203 93
--384 173 -408 175 -33 3 -68 -2 -85 -10z"/>
-                                            <path d="M6375 2434 c-123 -32 -211 -91 -273 -183 -64 -96 -69 -128 -76 -461
--8 -162 -13 -412 -21 -555 -17 -303 -19 -684 -5 -805 14 -119 29 -174 66 -256
-l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
-61 5 0 24 80 38 160 23 140 35 339 35 614 0 320 -27 1121 -40 1196 -24 132
--119 252 -226 312 -56 26 -80 31 -158 34 -50 2 -100 1 -111 -2z"/>
+                                    <svg
+                                        version="1.0"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="w-6 h-6 text-yellow-400"
+                                        width="1280.000000pt"
+                                        height="1219.000000pt"
+                                        viewBox="0 0 1280.000000 1219.000000"
+                                        preserveAspectRatio="xMidYMid meet"
+                                    >
+                                        <g
+                                            transform="translate(0.000000,1219.000000) scale(0.100000,-0.100000)"
+                                            fill="#000000"
+                                            stroke="none"
+                                        >
+                                            <path d="M6235 12171 c-44 -26 -61 -49 -94 -121 -74 -165 -108 -411 -156 -1110 -21 -309 -40 -462 -66 -535 -30 -83 -36 -226 -15 -330 24 -122 102 -271 186 -354 178 -178 382 -181 566 -9 57 54 66 68 88 137 13 42 34 132 46 201 21 116 23 166 30 695 6 491 10 580 25 645 23 100 23 273 0 360 -59 224 -226 372 -480 425 -93 19 -94 19 -130 -4z" />
+                                            <path d="M2686 11408 c-137 -18 -269 -116 -329 -245 -29 -63 -31 -77 -32 -173 0 -181 -45 -122 834 -1100 564 -627 776 -856 821 -887 84 -59 149 -76 269 -71 83 3 105 8 164 37 229 110 315 388 184 598 -18 28 -373 432 -790 897 -603 672 -770 853-815 881 -92 57 -193 78 -306 63z" />
+                                            <path d="M9974 11222 c-238 -156 -506 -450 -918 -1005 -218 -295 -424 -589 -850 -416 -250 -110 -277 -128 -340 -222 -54 -82 -73 -153 -68 -259 8 -231 1 -277 63 -339 33 -33 52 -42 127 -60 286 -66 674 -93 1544 -107 372 -6 433 -4 488 10 115 29 208 107 265 221 38 76 50 136 45 233 -3 75 -9 97 -38 155 -56 105 -158 182 -287 218 -97 27 -1134 42 -1543 23z" />
+                                            <path d="M11915 8759 c-224 -12 -444 -54 -1005 -194 -548 -137 -868 -224 -917 -248 -190 -97 -280 -327 -204 -526 44 -115 160 -223 279 -257 109 -32 159 -25 707 100 904 207 1140 273 1372 386 132 65 164 96 263 263 36 61 35 152 -3 227 -25 49 -103 154 -173 233 -27 31 -40 31 -319 16z" />
+                                            <path d="M895 9350 c-80 -21 -272 -116 -285 -140 -20 -38 -42 -186 -38 -255 8 -117 54 -185 168 -248 25 -13 99 -57 165 -97 66 -41 206 -115 310 -166 116 -68 265 -156 333 -194 376 -213 637 -293 828 -254 91 18 186 61 237 105 83 73 126 234 106 392 -29 231 -190 336 -1284 836 -293 135 -402 175 -1159 434 -203 93 -384 173 -408 175 -33 3 -68 -2 -85 -10z" />
                                         </g>
                                     </svg>
-
                                 )}
                             </div>
                         </button>
 
-                        {/* ========= LANGUAGE ========= */}
+                        {/* ========= LANGUAGE DROPDOWN ========= */}
                         <div className="absolute top-4 left-4">
-                            <select value={language} onChange={handleLanguageChange} className="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white rounded px-2 py-1">
+                            <select
+                                value={language}
+                                onChange={handleLanguageChange}
+                                className="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white rounded px-2 py-1"
+                                aria-label="Select Language"
+                            >
                                 <option value="en">English</option>
                                 <option value="de">Deutsch</option>
                             </select>
                         </div>
-                        {/* ============================= */}
+                        {/* ===================================== */}
 
-                        <div className="title text-2xl font-semibold mb-4">{t("title")}</div>
+                        <div className="title text-2xl font-semibold mb-4">
+                            {t("title")}
+                        </div>
                         <div className="subtitle text-base text-gray-600 mb-10">
                             {t("subtitle")}
                         </div>
@@ -377,24 +419,23 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                                 {exampleQuestions.map((question, index) => (
                                     <span
                                         key={index}
-                                        className="suggestion-box border border-gray-200 bg-gray-50 text-wrap dark:text-white dark:bg-gray-700 dark:border-opacity-0 rounded-xl py-4 px-5 text-base text-gray-800 shadow-md hover:bg-gray-200 cursor-pointer min-w-[150px] max-w-[200px] text-center overflow-hidden text-ellipsis whitespace-nowrap flex items-center justify-center"
+                                        className="suggestion-box border border-gray-200 bg-gray-50 dark:bg-gray-700 dark:text-white rounded-xl py-4 px-5 text-base text-gray-800 shadow-md hover:bg-gray-200 cursor-pointer min-w-[150px] max-w-[200px] text-center overflow-hidden text-ellipsis whitespace-nowrap flex items-center justify-center"
                                         onClick={() => {
                                             setInputText(question);
                                             handleSend();
                                         }}
                                     >
-                        {question}
-                    </span>
+                    {question}
+                  </span>
                                 ))}
                             </div>
-
                         )}
 
                         <div className="w-full flex flex-col gap-4">
                             {messages.map((msg) => (
                                 <div
                                     key={msg.id}
-                                    className={`p-3 rounded-2xl text-sm shadow-sm transition-all transform  ${
+                                    className={`p-3 rounded-2xl text-sm shadow-sm transition-all transform ${
                                         msg.user === "You"
                                             ? "dark:bg-gray-500 dark:text-white self-end bg-blue-200"
                                             : "dark:bg-gray-700 dark:text-white self-start bg-gray-100 relative group"
@@ -410,37 +451,41 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                                         {msg.text}
                                     </Markdown>
                                     {!isBotResponding && (
-                                        <div
-                                            className="absolute transform translate-x-4 translate-y-4 opacity-0 group-hover:opacity-100 flex space-x-2">
+                                        <div className="absolute transform translate-x-4 translate-y-4 opacity-0 group-hover:opacity-100 flex space-x-2">
                                             {msg.evaluation === "null" && (
                                                 <>
                                                     <FaThumbsUp
                                                         onClick={() => handleEvaluation(msg.id, "positive")}
-                                                        className="text-lg text-green-500 cursor-pointer hover:scale-110 transition-transform duration-300" />
+                                                        className="text-lg text-green-500 cursor-pointer hover:scale-110 transition-transform duration-300"
+                                                    />
                                                     <FaThumbsDown
                                                         onClick={() => handleEvaluation(msg.id, "negative")}
-                                                        className="text-lg text-red-500 cursor-pointer hover:scale-110 transition-transform duration-300" />
+                                                        className="text-lg text-red-500 cursor-pointer hover:scale-110 transition-transform duration-300"
+                                                    />
                                                 </>
                                             )}
                                             {msg.evaluation === "positive" && (
                                                 <FaThumbsUp
-                                                    className="text-lg text-green-500 cursor-default hover:scale-100 transition-none" />
+                                                    className="text-lg text-green-500 cursor-default hover:scale-100 transition-none"
+                                                />
                                             )}
                                             {msg.evaluation === "negative" && (
                                                 <FaThumbsDown
-                                                    className="text-lg text-red-500 cursor-default hover:scale-100 transition-none" />
+                                                    className="text-lg text-red-500 cursor-default hover:scale-100 transition-none"
+                                                />
                                             )}
                                         </div>
                                     )}
-
                                 </div>
                             ))}
                         </div>
 
                         {inputText.length > MAX_CHARACTERS && (
                             <div className="text-red-500 text-sm mb-2">
-                                Du kannst nur bis zu {MAX_CHARACTERS} Zeichen eingeben. Bitte
-                                entferne {inputText.length - MAX_CHARACTERS} Zeichen.
+                                {t("input_character_limit", {
+                                    count: MAX_CHARACTERS,
+                                    remaining: inputText.length - MAX_CHARACTERS,
+                                })}
                             </div>
                         )}
 
@@ -451,7 +496,10 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                                 </div>
                             )}
                             <div
-                                className={`input-area flex items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-3 w-full max-w-xl ${isBotResponding ? "opacity-50" : ""}`}>
+                                className={`input-area flex items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-3 w-full max-w-xl ${
+                                    isBotResponding ? "opacity-50" : ""
+                                }`}
+                            >
                                 <input
                                     ref={inputRef}
                                     type="text"
@@ -463,7 +511,7 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                                     disabled={isBotResponding}
                                 />
                                 <button
-                                    aria-label="Send prompt"
+                                    aria-label={t("send_prompt_label")}
                                     className="send-button flex items-center justify-center h-10 w-10 rounded-full bg-black text-white hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-black dark:bg-gray-600 dark:hover:bg-gray-500"
                                     onClick={handleSend}
                                     disabled={isBotResponding || !token || inputText.length > MAX_CHARACTERS}
@@ -476,24 +524,24 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                                         className="filter invert-[1] dark:invert-[1]"
                                     />
                                 </button>
-
                             </div>
-
                         </div>
 
                         <div className="mt-2 text-center text-gray-600 dark:text-gray-600 text-xs">
                             GrabbeAI kann Fehler machen. Überprüfe wichtige Informationen. Mit der Nutzung von GrabbeAI
-                            stimmen Sie unseren <a href="/tos"
-                                                   className="underline hover:text-gray-800">Nutzungsbedingungen</a> und
-                            der <a href="/privacy"
-                                   className="underline hover:text-gray-800">Datenschutzerklärung</a> zu.
+                            stimmen Sie unseren{" "}
+                            <a href="/tos" className="underline hover:text-gray-800">
+                                Nutzungsbedingungen
+                            </a>{" "}
+                            und der{" "}
+                            <a href="/privacy" className="underline hover:text-gray-800">
+                                Datenschutzerklärung
+                            </a>{" "}
+                            zu.
                         </div>
-
-
                     </div>
                 </div>
             </div>
-
         </div>
     );
 };
