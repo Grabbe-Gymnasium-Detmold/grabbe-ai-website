@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
-// Definiere Typen für Toasts
-// src/components/Toast.tsx
-export type ToastType = "success" | "info" | "warning" | "error"; // Stelle sicher, dass "error" enthalten ist
+// Definiere den Typ für die Toast-Nachricht
+export type ToastType = "success" | "info" | "warning" | "error" | "danger";
 
 // Toast-Interface
 interface Toast {
@@ -13,9 +12,13 @@ interface Toast {
 }
 
 // Definiere den Typ für das CustomEvent
-interface AddToastEvent extends CustomEvent {
-  detail: Toast;  // Die Detaildaten des CustomEvent sind vom Typ Toast
+interface AddToastEventDetail {
+  message: string;
+  type: ToastType;
+  duration: number;
 }
+
+interface AddToastEvent extends CustomEvent<AddToastEventDetail> {}
 
 // Der ToastContainer, der Toasts anzeigt
 const ToastContainer: React.FC = () => {
@@ -24,8 +27,8 @@ const ToastContainer: React.FC = () => {
 
   // Funktion zum Hinzufügen eines Toasts
   const addToast = (message: string, type: ToastType, duration: number = 3) => {
-    const id = new Date().getTime();
-    const newToast = { id, message, type, duration };
+    const id = new Date().getTime() + Math.random(); // Sicherstellen, dass die ID einzigartig ist
+    const newToast: Toast = { id, message, type, duration };
     setToasts((prevToasts) => [...prevToasts, newToast]);
 
     // Entferne Toast nach der angegebenen Dauer
@@ -39,16 +42,17 @@ const ToastContainer: React.FC = () => {
 
   // Effekthook zum Hören von Toast-Events
   useEffect(() => {
-    const handleAddToast = (event: AddToastEvent) => {
-      const { message, type, duration } = event.detail;
+    const handleAddToast = (event: Event) => {
+      // Typcast das Event zu AddToastEvent
+      const toastEvent = event as AddToastEvent;
+      const { message, type, duration } = toastEvent.detail;
       addToast(message, type, duration);
     };
 
-    // Typen für den Event-Listener angeben
-    window.addEventListener('add-toast', handleAddToast as EventListener);
+    window.addEventListener('add-toast', handleAddToast);
 
     return () => {
-      window.removeEventListener('add-toast', handleAddToast as EventListener);
+      window.removeEventListener('add-toast', handleAddToast);
     };
   }, []);
 
@@ -72,7 +76,9 @@ const ToastContainer: React.FC = () => {
                             ? 'bg-yellow-500'
                             : toast.type === 'danger'
                                 ? 'bg-red-500'
-                                : 'bg-blue-500' // info
+                                : toast.type === 'error'
+                                    ? 'bg-red-500' // Optional: Falls 'error' die gleiche Farbe wie 'danger' haben soll
+                                    : 'bg-blue-500' // info
                 } ${removingToastId === toast.id ? 'animate-fade-out' : 'animate-fly-up'}`}
             >
               <span className="flex-grow">{toast.message}</span>
@@ -80,13 +86,14 @@ const ToastContainer: React.FC = () => {
                   onClick={() => closeToast(toast.id)}
                   className="ml-4 text-white hover:text-gray-200 focus:outline-none"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M6 18L18 6M6 6l12 12"
-                  />
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
@@ -101,9 +108,9 @@ let toastId = 0;
 const useToast = () => {
   const addToast = (message: string, type: ToastType = 'info', duration: number = 3) => {
     toastId += 1;
-    const toast = { id: toastId, message, type, duration };
+    const toast: AddToastEventDetail = { message, type, duration };
     // Sende ein Custom Event an die Window-Instanz
-    window.dispatchEvent(new CustomEvent('add-toast', { detail: toast }));
+    window.dispatchEvent(new CustomEvent<AddToastEventDetail>('add-toast', { detail: toast }));
   };
 
   return { addToast };
