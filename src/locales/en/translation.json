@@ -1,0 +1,8 @@
+{
+  "title": "GrabbeAI",
+  "subtitle": "How can I assist you today?",
+  "placeholder": "Message GrabbeAI...",
+  "tos": "Terms of Service",
+  "privacy": "Privacy Policy",
+  "example_error": "Unable to fetch example questions. Please try again later."
+}
