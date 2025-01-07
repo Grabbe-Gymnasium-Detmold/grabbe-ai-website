@@ -14,9 +14,19 @@ export default defineConfig({
     minify: "terser", // Nutzt Terser für eine bessere Minifizierung
     rollupOptions: {
       output: {
+        entryFileNames: "assets/[name].[hash].js", // Dateihashing für JavaScript
+        chunkFileNames: "assets/[name].[hash].js", // Dateihashing für Chunks
+        assetFileNames: "assets/[name].[hash].[ext]", // Dateihashing für andere Ressourcen wie CSS/Images
         manualChunks: {
           vendor: ["react", "react-dom"], // Separiere Vendor-Bibliotheken wie React
         },
+      },
+    },
+  },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@import "@/styles/variables.scss";`, // Automatisches Importieren globaler SCSS-Variablen (optional)
       },
     },
   },
