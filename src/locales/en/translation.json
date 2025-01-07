@@ -1,8 +1,19 @@
 {
   "title": "GrabbeAI",
   "subtitle": "How can I assist you today?",
-  "placeholder": "Message GrabbeAI...",
-  "tos": "Terms of Service",
-  "privacy": "Privacy Policy",
-  "example_error": "Unable to fetch example questions. Please try again later."
+  "input_placeholder": "Message GrabbeAI...",
+  "tos": "Nutzungsbedingungen",
+  "privacy": "Datenschutzerklärung",
+  "example_error": "Die Vorschläge konnten leider nicht geladen werden. Bitte versuche es später erneut.",
+  "error_authentication": "Es gab ein Problem bei der Anmeldung. Bitte versuche es später noch einmal.",
+  "error_create_thread": "Fehler beim Erstellen des Threads. Bitte versuche es später erneut.",
+  "error_fetch_bot_response": "Fehler beim Abrufen der Bot-Antwort.",
+  "error_fetch_example_questions": "Es konnte keine Verbindung zu den Beispiel-Fragen hergestellt werden. Bitte versuche es später erneut.",
+  "input_character_limit": "Du kannst nur bis zu {{count}} Zeichen eingeben. Bitte entferne {{remaining}} Zeichen.",
+  "evaluation_thanks_positive": "Danke für deine Bewertung der Nachricht!",
+  "evaluation_error": "Leider gab es einen Fehler beim Senden der Bewertung. Trotzdem danke!",
+  "tos_link": "Nutzungsbedingungen",
+  "privacy_link": "Datenschutzerklärung",
+  "dark_mode_toggle_label": "Dark Mode umschalten",
+  "send_prompt_label": "Send prompt"
 }

@@ -1,7 +1,7 @@
 {
   "title": "GrabbeAI",
   "subtitle": "Wobei kann ich dir heute helfen?",
-  "placeholder": "Schreibe GrabbeAI...",
+  "input_placeholder": "Schreibe GrabbeAI...",
   "tos": "Nutzungsbedingungen",
   "privacy": "Datenschutzerklärung",
   "example_error": "Die Vorschläge konnten leider nicht geladen werden. Bitte versuche es später erneut.",

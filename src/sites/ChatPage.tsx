@@ -367,7 +367,7 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                         </div>
                         {/* ============================= */}
 
-                        <div className="title text-2xl font-semibold mb-4">GrabbeAI</div>
+                        <div className="title text-2xl font-semibold mb-4">{t("title")}</div>
                         <div className="subtitle text-base text-gray-600 mb-10">
                             {t("subtitle")}
                         </div>
@@ -455,7 +455,7 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                                 <input
                                     ref={inputRef}
                                     type="text"
-                                    placeholder="Schreibe GrabbeAI..."
+                                    placeholder={t("input_placeholder")}
                                     className="flex-1 bg-transparent outline-none text-base px-2 rounded-full dark:text-white dark:placeholder-white"
                                     value={inputText}
                                     onChange={handleInputChange}
