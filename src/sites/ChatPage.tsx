@@ -378,14 +378,15 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                                 {exampleQuestions.map((question, index) => (
                                     <span
                                         key={index}
-                                        className="suggestion-box bg-gray-100 text-wrap dark:text-white dark:bg-gray-700 rounded-xl py-4 px-5 text-base text-gray-800 shadow-md hover:bg-gray-200 cursor-pointer min-w-[150px] max-w-[200px] text-center overflow-hidden text-ellipsis whitespace-nowrap flex items-center justify-center"
+                                        className="suggestion-box bg-white text-black border border-black rounded-xl py-4 px-5 text-base shadow-md hover:bg-gray-100 cursor-pointer min-w-[150px] max-w-[200px] text-center overflow-hidden text-ellipsis whitespace-nowrap flex items-center justify-center"
                                         onClick={() => {
                                             setInputText(question);
                                             handleSend();
                                         }}
                                     >
-                {question}
-            </span>
+    {question}
+</span>
+
                                 ))}
                             </div>
 
