@@ -36,6 +36,7 @@
     "remark-math": "^6.0.0",
     "remark-parse": "^11.0.0",
     "remark-prettier": "^2.0.0",
+    "require": "^2.4.20",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7"
   },
