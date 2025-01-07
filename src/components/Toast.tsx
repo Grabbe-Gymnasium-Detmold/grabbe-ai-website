@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
 // Definiere Typen für Toasts
-type ToastType = 'success' | 'warning' | 'danger' | 'info';
+// src/components/Toast.tsx
+export type ToastType = "success" | "info" | "warning" | "error"; // Stelle sicher, dass "error" enthalten ist
 
 // Toast-Interface
 interface Toast {
