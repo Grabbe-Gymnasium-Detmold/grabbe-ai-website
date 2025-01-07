@@ -465,7 +465,7 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                                     disabled={isBotResponding || !token || inputText.length > MAX_CHARACTERS}
                                 >
                                     <img
-                                        src="/public/send.svg"
+                                        src="/send.svg"
                                         alt="Send Icon"
                                         width="32"
                                         height="32"
