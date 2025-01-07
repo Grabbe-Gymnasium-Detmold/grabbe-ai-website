@@ -1,21 +1,19 @@
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
+import i18next from 'i18next';
 import HttpBackend from 'i18next-http-backend';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
-i18n
-    .use(HttpBackend) // lädt Übersetzungsdateien
-    .use(LanguageDetector) // erkennt die Sprache des Nutzers
-    .use(initReactI18next) // Integration mit React
+i18next
+    .use(HttpBackend) // Lädt Übersetzungsdateien
+    .use(LanguageDetector) // Erkennt die Sprache des Nutzers
     .init({
-        fallbackLng: 'de', // Standard-Sprache
-        debug: true, // Debug-Modus
+        fallbackLng: 'en', // Standardsprache
+        debug: true, // Debugging aktivieren
         interpolation: {
-            escapeValue: false, // verhindert XSS
+            escapeValue: false, // Kein Escaping für HTML
         },
         backend: {
             loadPath: '/locales/{{lng}}/translation.json', // Pfad zu den Übersetzungsdateien
         },
     });
 
-export default i18n;
+export default i18next;
