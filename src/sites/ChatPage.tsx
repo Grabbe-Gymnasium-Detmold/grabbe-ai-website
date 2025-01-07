@@ -10,6 +10,7 @@ import {BlueLink} from "@/components/BlueLink.tsx";
 import rehypeSemanticBlockquotes from "rehype-semantic-blockquotes";
 import {FaThumbsDown, FaThumbsUp} from "react-icons/fa";
 import {useToast} from "@/components/Toast.tsx";
+
 const API_URL = "https://api.grabbe.site/chat";
 const AUTH_URL = "https://api.grabbe.site/auth";
 const THREAD_URL = "https://api.grabbe.site/thread/create";
@@ -17,19 +18,17 @@ const EXAMPLE_QUESTION_URL = "https://api.grabbe.site/examples";
 const CHECK_TOKEN_URL = "https://api.grabbe.site/auth/check";
 const EVALUATION_URL = "https://api.grabbe.site/evaluation";
 
-
-
 const ChatPage: React.FC = () => {
     const [messages, setMessages] = useState<{ id: number; text: string; user: "You" | "Bot", evaluation: string }[]>([]);
     const [isBotResponding, setIsBotResponding] = useState<boolean>(false);
     const [showExampleCards, setShowExampleCards] = useState<boolean>(true);
     const [inputText, setInputText] = useState<string>("");
-    const [exampleQuestions, setExampleQuestions] = useState<string[]>([""]);
+    const [exampleQuestions, setExampleQuestions] = useState<string[]>([]);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [token, setToken] = useState<string | null>(localStorage.getItem("session_token"));
     const [threadId, setThreadId] = useState<string | null>(null);
     const [isDarkMode, setIsDarkMode] = useState<boolean>(localStorage.getItem("theme") === "dark");
-    const { addToast } = useToast();  // Verwende die Toast-Hook
+    const { addToast } = useToast();
 
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -89,7 +88,8 @@ const ChatPage: React.FC = () => {
             try {
                 const cachedQuestions = localStorage.getItem("example_questions");
                 if (cachedQuestions) {
-                    setExampleQuestions(JSON.parse(cachedQuestions));
+                    const parsedQuestions = JSON.parse(cachedQuestions);
+                    setExampleQuestions(shuffleAndSlice(parsedQuestions, 4));
                     return;
                 }
 
@@ -101,7 +101,7 @@ const ChatPage: React.FC = () => {
 
                 const {questions} = await qResponse.json();
                 localStorage.setItem("example_questions", JSON.stringify(questions));
-                setExampleQuestions(questions);
+                setExampleQuestions(shuffleAndSlice(questions, 4));
             } catch (error) {
                 console.error(error);
                 setErrorMessage("Es konnte keine Verbindung zu den Beispiel-Fragen hergestellt werden. Bitte versuche es später erneut.");
@@ -122,6 +122,11 @@ const ChatPage: React.FC = () => {
     }, [isDarkMode]);
 
     const toggleDarkMode = () => setIsDarkMode(prevMode => !prevMode);
+
+    const shuffleAndSlice = (array: string[], count: number): string[] => {
+        const shuffled = array.sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, count);
+    };
 
     const handleSend = async (): Promise<void> => {
         if (!inputText.trim() || isBotResponding || inputText.length > MAX_CHARACTERS) return;
