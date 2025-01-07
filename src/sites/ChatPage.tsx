@@ -460,7 +460,7 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                                 />
                                 <button
                                     aria-label="Send prompt"
-                                    className="send-button flex items-center justify-center h-10 w-10 rounded-full bg-black text-white hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-black dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500"
+                                    className="send-button flex items-center justify-center h-10 w-10 rounded-full bg-black text-white hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-black dark:bg-gray-600 dark:hover:bg-gray-500"
                                     onClick={handleSend}
                                     disabled={isBotResponding || !token || inputText.length > MAX_CHARACTERS}
                                 >
@@ -469,8 +469,10 @@ l32 -72 81 -31 c92 -35 178 -57 266 -66 56 -6 72 -2 235 54 96 34 175 61 177
                                         alt="Send Icon"
                                         width="32"
                                         height="32"
+                                        className="filter invert-[1] dark:invert-[1]"
                                     />
                                 </button>
+
                             </div>
 
                         </div>
