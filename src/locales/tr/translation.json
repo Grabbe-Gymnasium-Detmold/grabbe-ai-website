@@ -1,0 +1,20 @@
+{
+  "title": "GrabbeAI",
+  "subtitle": "Bugün size nasıl yardımcı olabilirim?",
+  "input_placeholder": "GrabbeAI'ye mesaj gönder...",
+  "tos": "Kullanım Koşulları",
+  "privacy": "Gizlilik Politikası",
+  "example_error": "Öneriler yüklenemedi. Lütfen daha sonra tekrar deneyin.",
+  "error_authentication": "Giriş yaparken bir sorun oluştu. Lütfen daha sonra tekrar deneyin.",
+  "error_create_thread": "Konu oluşturulurken hata oluştu. Lütfen daha sonra tekrar deneyin.",
+  "error_fetch_bot_response": "Bot yanıtı alınırken hata oluştu.",
+  "error_fetch_example_questions": "Örnek sorulara bağlantı kurulamadı. Lütfen daha sonra tekrar deneyin.",
+  "input_character_limit": "En fazla {{count}} karakter girebilirsiniz. Lütfen {{remaining}} karakteri kaldırın.",
+  "evaluation_thanks_positive": "Değerlendirmeniz için teşekkür ederiz!",
+  "evaluation_error": "Değerlendirmenizi gönderirken bir hata oluştu. Yine de teşekkürler!",
+  "tos_link": "Kullanım Koşulları",
+  "privacy_link": "Gizlilik Politikası",
+  "dark_mode_toggle_label": "Karanlık Modu Aç/Kapat",
+  "send_prompt_label": "Komutu gönder",
+  "language": "Dil"
+}

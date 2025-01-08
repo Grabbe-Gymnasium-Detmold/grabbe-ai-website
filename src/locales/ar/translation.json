@@ -1,0 +1,20 @@
+{
+  "title": "GrabbeAI",
+  "subtitle": "كيف يمكنني مساعدتك اليوم؟",
+  "input_placeholder": "أرسل رسالة إلى GrabbeAI...",
+  "tos": "شروط الاستخدام",
+  "privacy": "سياسة الخصوصية",
+  "example_error": "تعذر تحميل الاقتراحات. يرجى المحاولة مرة أخرى لاحقًا.",
+  "error_authentication": "حدثت مشكلة أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى لاحقًا.",
+  "error_create_thread": "خطأ في إنشاء المحادثة. يرجى المحاولة مرة أخرى لاحقًا.",
+  "error_fetch_bot_response": "خطأ في جلب رد البوت.",
+  "error_fetch_example_questions": "تعذر الاتصال بالأسئلة النموذجية. يرجى المحاولة مرة أخرى لاحقًا.",
+  "input_character_limit": "يمكنك إدخال حتى {{count}} حرفًا فقط. يرجى إزالة {{remaining}} حرفًا.",
+  "evaluation_thanks_positive": "شكرًا لتقييمك للرسالة!",
+  "evaluation_error": "حدث خطأ أثناء إرسال التقييم. شكرًا على أي حال!",
+  "tos_link": "شروط الاستخدام",
+  "privacy_link": "سياسة الخصوصية",
+  "dark_mode_toggle_label": "تبديل الوضع الداكن",
+  "send_prompt_label": "إرسال الطلب",
+  "language": "لغة"
+}

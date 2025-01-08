@@ -15,5 +15,6 @@
   "tos_link": "Nutzungsbedingungen",
   "privacy_link": "Datenschutzerklärung",
   "dark_mode_toggle_label": "Dark Mode umschalten",
-  "send_prompt_label": "Send prompt"
+  "send_prompt_label": "Send prompt",
+  "language": "Sprache"
 }

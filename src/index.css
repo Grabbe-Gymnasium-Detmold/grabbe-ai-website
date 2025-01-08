@@ -94,3 +94,7 @@ a {
 .animate-fade-out {
     animation: fade-out 0.5s ease-out forwards;
 }
+
+body{
+
+}
