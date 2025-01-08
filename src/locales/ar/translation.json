@@ -16,5 +16,6 @@
   "privacy_link": "سياسة الخصوصية",
   "dark_mode_toggle_label": "تبديل الوضع الداكن",
   "send_prompt_label": "إرسال الطلب",
-  "language": "لغة"
+  "language": "لغة",
+  "disclaimer": "GrabbeAI يمكن أن يرتكب الأخطاء. مراجعة المعلومات الهامة. باستخدام GrabbeAI فإنك توافق على {tos} و{privacy}."
 }

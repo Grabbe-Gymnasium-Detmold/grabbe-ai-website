@@ -33,6 +33,8 @@ const ChatPage: React.FC = () => {
     const [threadId, setThreadId] = useState<string | null>(null);
     const [isDarkMode, setIsDarkMode] = useState<boolean>(localStorage.getItem("theme") === "dark");
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [disclaimer, setDisclaimer] = useState("");
+
 
     const { addToast } = useToast();
     const emojiContainerRef = useRef(null);
@@ -47,6 +49,23 @@ const ChatPage: React.FC = () => {
         setIsDropdownOpen(false);
 
     };
+    const updateDisclaimer = () => {
+        const updatedDisclaimer = t("disclaimer")
+            .replace(
+                "{tos}",
+                '<a href="/tos" class="underline hover:text-gray-800">' + t("tos_link") + "</a>"
+            )
+            .replace(
+                "{privacy}",
+                '<a href="/privacy" class="underline hover:text-gray-800">' + t("privacy_link") + "</a>"
+            );
+        setDisclaimer(updatedDisclaimer);
+    };
+
+    useEffect(() => {
+        updateDisclaimer();
+    }, [i18n.language]); // i18n.language ändert sich bei Sprachwechsel
+
     const languages = [
         { code: "ar", name: "Arabic", flag: "🇸🇦" },
         { code: "de", name: "Deutsch", flag: "🇩🇪" },
@@ -305,7 +324,8 @@ const ChatPage: React.FC = () => {
                                     onClick={toggleDropdown}
                                     className="flex items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-xl text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none"
                                 >
-                                    🌐 {t("language")} <span className="ml-2">{!isDropdownOpen ? (<>&#x25BC;</>) : (<>&#x25b2;</>)}</span>
+                                    🌐 {t("language")} <span
+                                    className="ml-2">{!isDropdownOpen ? (<>&#x25BC;</>) : (<>&#x25b2;</>)}</span>
                                 </button>
                                 {isDropdownOpen && (
                                     <div
@@ -326,137 +346,132 @@ const ChatPage: React.FC = () => {
                         </div>
 
 
+                        <div className="title text-2xl font-semibold mb-4">{t('title')}</div>
+                        <div className="subtitle text-base text-gray-600 mb-10">
+                            {t('subtitle')}
+                        </div>
 
-                    <div className="title text-2xl font-semibold mb-4">{t('title')}</div>
-                    <div className="subtitle text-base text-gray-600 mb-10">
-                        {t('subtitle')}
-                    </div>
-
-                    {showExampleCards && (
-                        <div className="suggestions flex flex-wrap justify-center gap-5 mb-16 w-full">
-                            {exampleQuestions.map((question, index) => (
-                                <span
-                                    key={index}
-                                    className="suggestion-box border border-gray-200 bg-gray-50 text-wrap dark:text-white dark:bg-gray-700 dark:border-opacity-0 rounded-xl py-4 px-5 text-base text-gray-800 shadow-md hover:bg-gray-200 cursor-pointer min-w-[150px] max-w-[200px] text-center overflow-hidden text-ellipsis whitespace-nowrap flex items-center justify-center"
-                                    onClick={() => {
-                                        setInputText(question);
-                                        handleSend();
-                                    }}
-                                >
+                        {showExampleCards && (
+                            <div className="suggestions flex flex-wrap justify-center gap-5 mb-16 w-full">
+                                {exampleQuestions.map((question, index) => (
+                                    <span
+                                        key={index}
+                                        className="suggestion-box border border-gray-200 bg-gray-50 text-wrap dark:text-white dark:bg-gray-700 dark:border-opacity-0 rounded-xl py-4 px-5 text-base text-gray-800 shadow-md hover:bg-gray-200 cursor-pointer min-w-[150px] max-w-[200px] text-center overflow-hidden text-ellipsis whitespace-nowrap flex items-center justify-center"
+                                        onClick={() => {
+                                            setInputText(question);
+                                            handleSend();
+                                        }}
+                                    >
                 {question}
             </span>
+                                ))}
+                            </div>
+
+                        )}
+
+                        <div className="w-full flex flex-col gap-4">
+                            {messages.map((msg) => (
+                                <div
+                                    key={msg.id}
+                                    className={`p-3 rounded-2xl text-sm shadow-sm transition-all transform  ${
+                                        msg.user === "You"
+                                            ? "dark:bg-gray-500 dark:text-white self-end bg-blue-200"
+                                            : "dark:bg-gray-700 dark:text-white self-start bg-gray-100 relative group"
+                                    }`}
+                                >
+                                    <Markdown
+                                        remarkPlugins={[remarkGfm, remarkMath]}
+                                        rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeSemanticBlockquotes]}
+                                        components={{
+                                            a: (props) => <BlueLink {...props} />,
+                                        }}
+                                    >
+                                        {msg.text}
+                                    </Markdown>
+                                    {!isBotResponding && (
+                                        <div
+                                            className="absolute transform translate-x-4 translate-y-4 opacity-0 group-hover:opacity-100 flex space-x-2">
+                                            {msg.evaluation == "null" && (
+                                                <>
+                                                    <FaThumbsUp
+                                                        onClick={() => handleEvaluation(msg.id, "positive")}
+                                                        className="text-lg text-green-500 cursor-pointer hover:scale-110 transition-transform duration-300"/>
+                                                    <FaThumbsDown
+                                                        onClick={() => handleEvaluation(msg.id, "negative")}
+                                                        className="text-lg text-red-500 cursor-pointer hover:scale-110 transition-transform duration-300"/>
+                                                </>
+                                            )}
+                                            {msg.evaluation == "positive" && (
+                                                <FaThumbsUp
+                                                    className="text-lg text-green-500 cursor-default hover:scale-100 transition-none"/>
+                                            )}
+                                            {msg.evaluation == "negative" && (
+                                                <FaThumbsDown
+                                                    className="text-lg text-red-500 cursor-default hover:scale-100 transition-none"/>
+                                            )}
+                                        </div>
+                                    )}
+
+                                </div>
                             ))}
                         </div>
 
-                    )}
-
-                    <div className="w-full flex flex-col gap-4">
-                        {messages.map((msg) => (
-                            <div
-                                key={msg.id}
-                                className={`p-3 rounded-2xl text-sm shadow-sm transition-all transform  ${
-                                    msg.user === "You"
-                                        ? "dark:bg-gray-500 dark:text-white self-end bg-blue-200"
-                                        : "dark:bg-gray-700 dark:text-white self-start bg-gray-100 relative group"
-                                }`}
-                            >
-                                <Markdown
-                                    remarkPlugins={[remarkGfm, remarkMath]}
-                                    rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeSemanticBlockquotes]}
-                                    components={{
-                                        a: (props) => <BlueLink {...props} />,
-                                    }}
-                                >
-                                    {msg.text}
-                                </Markdown>
-                                {!isBotResponding && (
-                                    <div
-                                        className="absolute transform translate-x-4 translate-y-4 opacity-0 group-hover:opacity-100 flex space-x-2">
-                                        {msg.evaluation == "null" && (
-                                            <>
-                                                <FaThumbsUp
-                                                    onClick={() => handleEvaluation(msg.id, "positive")}
-                                                    className="text-lg text-green-500 cursor-pointer hover:scale-110 transition-transform duration-300"/>
-                                                <FaThumbsDown
-                                                    onClick={() => handleEvaluation(msg.id, "negative")}
-                                                    className="text-lg text-red-500 cursor-pointer hover:scale-110 transition-transform duration-300"/>
-                                            </>
-                                        )}
-                                        {msg.evaluation == "positive" && (
-                                            <FaThumbsUp
-                                                className="text-lg text-green-500 cursor-default hover:scale-100 transition-none"/>
-                                        )}
-                                        {msg.evaluation == "negative" && (
-                                            <FaThumbsDown
-                                                className="text-lg text-red-500 cursor-default hover:scale-100 transition-none"/>
-                                        )}
-                                    </div>
-                                )}
-
-                            </div>
-                        ))}
-                    </div>
-
-                    {inputText.length > MAX_CHARACTERS && (
-                        <div className="text-red-500 text-sm mb-2">
-                            {t('input_character_limit')}
-                        </div>
-                    )}
-
-                    <div className="input-area-wrapper w-full flex justify-center mt-6 relative">
-                        {isBotResponding && (
-                            <div className="absolute top-0 left-0 w-full h-full flex justify-center items-center">
-                                <div className="h-4 w-4 dark:bg-gray-700 rounded-full animate-pulse"></div>
+                        {inputText.length > MAX_CHARACTERS && (
+                            <div className="text-red-500 text-sm mb-2">
+                                {t('input_character_limit')}
                             </div>
                         )}
-                        <div
-                            className={`input-area flex items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-3 w-full max-w-xl ${isBotResponding ? "opacity-50" : ""}`}>
-                            <input
-                                ref={inputRef}
-                                type="text"
-                                placeholder={t("input_placeholder")}
-                                className="flex-1 bg-transparent outline-none text-base px-2 rounded-full dark:text-white dark:placeholder-white"
-                                value={inputText}
-                                onChange={handleInputChange}
-                                onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                                disabled={isBotResponding}
-                            />
-                            <button
-                                aria-label="Send prompt"
-                                className="send-button flex items-center justify-center h-10 w-10 rounded-full bg-black text-white hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-black dark:bg-gray-600 dark:hover:bg-gray-500"
-                                onClick={handleSend}
-                                disabled={isBotResponding || !token || inputText.length > MAX_CHARACTERS}
-                            >
-                                <img
-                                    src="/send.svg"
-                                    alt="Send Icon"
-                                    width="32"
-                                    height="32"
-                                    className="filter invert-[1] dark:invert-[1]"
+
+                        <div className="input-area-wrapper w-full flex justify-center mt-6 relative">
+                            {isBotResponding && (
+                                <div className="absolute top-0 left-0 w-full h-full flex justify-center items-center">
+                                    <div className="h-4 w-4 dark:bg-gray-700 rounded-full animate-pulse"></div>
+                                </div>
+                            )}
+                            <div
+                                className={`input-area flex items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-3 w-full max-w-xl ${isBotResponding ? "opacity-50" : ""}`}>
+                                <input
+                                    ref={inputRef}
+                                    type="text"
+                                    placeholder={t("input_placeholder")}
+                                    className="flex-1 bg-transparent outline-none text-base px-2 rounded-full dark:text-white dark:placeholder-white"
+                                    value={inputText}
+                                    onChange={handleInputChange}
+                                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                                    disabled={isBotResponding}
                                 />
-                            </button>
+                                <button
+                                    aria-label="Send prompt"
+                                    className="send-button flex items-center justify-center h-10 w-10 rounded-full bg-black text-white hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-black dark:bg-gray-600 dark:hover:bg-gray-500"
+                                    onClick={handleSend}
+                                    disabled={isBotResponding || !token || inputText.length > MAX_CHARACTERS}
+                                >
+                                    <img
+                                        src="/send.svg"
+                                        alt="Send Icon"
+                                        width="32"
+                                        height="32"
+                                        className="filter invert-[1] dark:invert-[1]"
+                                    />
+                                </button>
+
+                            </div>
 
                         </div>
 
+                        <div className="mt-2 text-center text-gray-600 dark:text-gray-600 text-xs">
+                            <span dangerouslySetInnerHTML={{__html: disclaimer}}/>
+                        </div>
+
+
                     </div>
-
-                    <div className="mt-2 text-center text-gray-600 dark:text-gray-600 text-xs">
-                        GrabbeAI kann Fehler machen. Überprüfe wichtige Informationen. Mit der Nutzung von GrabbeAI
-                        stimmen Sie unseren <a href="/tos"
-                                               className="underline hover:text-gray-800">Nutzungsbedingungen</a> und
-                        der <a href="/privacy"
-                               className="underline hover:text-gray-800">Datenschutzerklärung</a> zu.
-                    </div>
-
-
                 </div>
+
             </div>
 
         </div>
-
-</div>
-)
-    ;
+    )
+        ;
 };
 
 export default ChatPage;

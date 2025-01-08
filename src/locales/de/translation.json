@@ -16,5 +16,6 @@
   "privacy_link": "Datenschutzerklärung",
   "dark_mode_toggle_label": "Dark Mode umschalten",
   "send_prompt_label": "Send prompt",
-  "language": "Sprache"
+  "language": "Sprache",
+  "disclaimer": "GrabbeAI kann Fehler machen. Überprüfe wichtige Informationen. Mit der Nutzung von GrabbeAI stimmen Sie unseren {tos} und der {privacy} zu."
 }

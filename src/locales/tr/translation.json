@@ -16,5 +16,6 @@
   "privacy_link": "Gizlilik Politikası",
   "dark_mode_toggle_label": "Karanlık Modu Aç/Kapat",
   "send_prompt_label": "Komutu gönder",
-  "language": "Dil"
+  "language": "Dil",
+  "disclaimer": "GrabbeAI hata yapabilir. Önemli bilgileri gözden geçirin. GrabbeAI'yi kullanarak {tos} ve {privacy} hükümlerimizi kabul etmiş olursunuz."
 }
