@@ -124,34 +124,61 @@ const ChatPage: React.FC = () => {
         checkToken();
     }, [token, authenticate, validateToken]);
 
+
     useEffect(() => {
         const fetchExampleQuestions = async () => {
             if (!token) return;
+
+            const currentLanguage = i18n.language; // Aktuelle Sprache ermitteln
+
             try {
-                const cachedQuestions = localStorage.getItem("example_questions");
-                if (cachedQuestions) {
-                    const parsedQuestions = JSON.parse(cachedQuestions);
-                    setExampleQuestions(shuffleAndSlice(parsedQuestions, 4));
-                    return;
+                const cacheKey = `example_questions`;
+                const reloadCounterKey = `reload_counter`;
+
+                // Lade den aktuellen Zählerstand aus dem localStorage (Standardwert 0)
+                const reloadCounter = parseInt(localStorage.getItem(reloadCounterKey) || "0", 10);
+
+                // Überprüfen, ob der Cache invalidiert werden soll
+                if (reloadCounter >= 4) {
+                    localStorage.removeItem(cacheKey); // Cache invalidieren
+                    localStorage.setItem(reloadCounterKey, "1"); // Zählerstand zurücksetzen
                 }
 
-                const qResponse = await fetch(EXAMPLE_QUESTION_URL, {
-                    method: "GET",
-                    headers: {"Content-Type": "application/json", Authorization: `Bearer ${token}`},
-                });
-                if (!qResponse.ok) throw new Error("Fetching example questions failed.");
+                const cachedQuestions = localStorage.getItem(cacheKey);
 
-                const {questions} = await qResponse.json();
-                localStorage.setItem("example_questions", JSON.stringify(questions));
-                setExampleQuestions(shuffleAndSlice(questions, 4));
+                if (cachedQuestions) {
+                    const parsedQuestions = JSON.parse(cachedQuestions);
+                    setExampleQuestions(shuffleAndSlice(parsedQuestions[currentLanguage], 4));
+                } else {
+                    const qResponse = await fetch(`${EXAMPLE_QUESTION_URL}`, {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
+                        },
+                    });
+
+                    if (!qResponse.ok) throw new Error("Fetching example questions failed.");
+
+                    const { questions } = await qResponse.json();
+                    localStorage.setItem(cacheKey, JSON.stringify(questions));
+                    setExampleQuestions(shuffleAndSlice(questions[currentLanguage], 4));
+                }
+
+                // Zählerstand erhöhen und speichern
+                localStorage.setItem(reloadCounterKey, (reloadCounter + 1).toString());
             } catch (error) {
                 console.error(error);
-                setErrorMessage("Es konnte keine Verbindung zu den Beispiel-Fragen hergestellt werden. Bitte versuche es später erneut.");
+                setErrorMessage(
+                    i18n.t("error_message", "Es konnte keine Verbindung zu den Beispiel-Fragen hergestellt werden. Bitte versuche es später erneut.")
+                );
             }
         };
 
         fetchExampleQuestions();
-    }, [token]);
+    }, [token, i18n.language]);
+
+
 
     useEffect(() => {
         const savedTheme = localStorage.getItem("theme");
