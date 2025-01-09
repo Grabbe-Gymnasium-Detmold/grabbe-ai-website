@@ -364,7 +364,7 @@ const ChatPage: React.FC = () => {
                             className="bg-white dark:bg-gray-700 text-gray-700 dark:text-white shadow-md rounded-xl text-sm absolute right-0 mt-2 w-48 z-30"
                         >
                             <span className="absolute top-0 right-0 w-3 h-3 bg-white dark:bg-gray-700 transform rotate-45 -mt-1 mr-3"></span>
-                            <div className="overflow-auto rounded w-full relative z-10">
+                            <div className="overflow-auto rounded-xl w-full relative z-10">
                                 <ul className="list-none p-0 m-0">
                                     {languages.map((lang) => (
                                         <li key={lang.code}>
