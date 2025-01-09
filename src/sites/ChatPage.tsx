@@ -486,34 +486,33 @@ const ChatPage: React.FC = () => {
                         </div>
                     )}
                     <div
-                                className={`input-area flex items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-3 w-full max-w-xl ${isBotResponding ? "opacity-50" : ""}`}>
-                                <input
-                                    ref={inputRef}
-                                    type="text"
-                                    placeholder={t("input_placeholder")}
-                                    className="flex-1 bg-transparent outline-none text-base px-2 rounded-full dark:text-white dark:placeholder-white"
-                                    value={inputText}
-                                    onChange={handleInputChange}
-                                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                                    disabled={isBotResponding}
-                                />
-                                <button
-                                    aria-label="Send prompt"
-                                    className="send-button flex items-center justify-center h-10 w-10 rounded-full bg-black text-white hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-black dark:bg-gray-600 dark:hover:bg-gray-500"
-                                    onClick={handleSend}
-                                    disabled={isBotResponding || !token || inputText.length > MAX_CHARACTERS}
-                                >
-                                    <img
-                                        src="/send.svg"
-                                        alt="Send Icon"
-                                        width="32"
-                                        height="32"
-                                        className="filter invert-[1] dark:invert-[1]"
-                                    />
-                                </button>
-
-                            </div>
+                        className={`input-area flex items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-3 w-full max-w-xl ${isBotResponding ? "opacity-50" : ""}`}>
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            placeholder={t("input_placeholder")}
+                            className="flex-1 bg-transparent outline-none text-base px-2 rounded-full dark:text-white dark:placeholder-white"
+                            value={inputText}
+                            onChange={handleInputChange}
+                            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                            disabled={isBotResponding}
+                        />
+                        <button
+                            aria-label="Send prompt"
+                            className="send-button flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-black text-white hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-black dark:bg-gray-600 dark:hover:bg-gray-500"
+                            onClick={handleSend}
+                            disabled={isBotResponding || !token || inputText.length > MAX_CHARACTERS}
+                        >
+                            <img
+                                src="/send.svg"
+                                alt="Send Icon"
+                                width="32"
+                                height="32"
+                                className="filter invert-[1] dark:invert-[1]"
+                            />
+                        </button>
                     </div>
+                </div>
 
                 <div className="mt-2 text-center text-gray-600 dark:text-gray-600 text-xs">
                     <span dangerouslySetInnerHTML={{ __html: disclaimer }} />
