@@ -181,14 +181,14 @@ const ChatPage: React.FC = () => {
 
 
     useEffect(() => {
-        const savedTheme = localStorage.getItem("theme");
-        setIsDarkMode(savedTheme === "dark" || (savedTheme === null && window.matchMedia("(prefers-color-scheme: dark)").matches));
+       if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+           setIsDarkMode(true);
+           document.documentElement.classList.toggle("dark", isDarkMode);
+       }else{
+           setIsDarkMode(false)
+       }
     }, []);
 
-    useEffect(() => {
-        localStorage.setItem("theme", isDarkMode ? "dark" : "light");
-        document.documentElement.classList.toggle("dark", isDarkMode);
-    }, [isDarkMode]);
 
 
     const shuffleAndSlice = (array: string[], count: number): string[] => {
@@ -351,7 +351,7 @@ const ChatPage: React.FC = () => {
                                     onClick={toggleDropdown}
                                     className="flex items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-xl text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none"
                                 >
-                                    🌐 {t("language")} <span
+                                    {languages.find(lang => lang.code === i18n.language)?.flag} <span
                                     className="ml-2">{!isDropdownOpen ? (<>&#x25BC;</>) : (<>&#x25b2;</>)}</span>
                                 </button>
                                 {isDropdownOpen && (
