@@ -340,8 +340,9 @@ const ChatPage: React.FC = () => {
 
     return (
         <div className="bg-white text-gray-800 flex justify-center items-center min-h-screen dark:bg-gray-800 relative">
+
             {/* Beginn des neuen Language Dropdowns */}
-            <div className="top-4 right-4 z-50" ref={dropdownRef}>
+            <div className="fixed top-4 right-4 z-50" ref={dropdownRef}>
                 <div className="relative">
                     <button
                         className="bg-white text-gray-500 dark:bg-gray-700 dark:text-white rounded shadow-lg py-2 pr-3 pl-5 focus:outline-none flex items-center"
