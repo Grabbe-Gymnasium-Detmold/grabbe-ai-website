@@ -485,13 +485,19 @@ const ChatPage: React.FC = () => {
                             <div className="h-4 w-4 dark:bg-gray-700 rounded-full animate-pulse"></div>
                         </div>
                     )}
+                     <div className="input-area-wrapper w-full flex justify-center mt-6 relative">
+                    {isBotResponding && (
+                        <div className="absolute top-0 left-0 w-full h-full flex justify-center items-center">
+                            <div className="h-4 w-4 dark:bg-gray-700 rounded-full animate-pulse"></div>
+                        </div>
+                    )}
                     <div
-                        className={`input-area flex items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-3 w-full max-w-xl ${isBotResponding ? "opacity-50" : ""}`}>
+                        className={`input-area flex flex-nowrap items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-3 w-full ${isBotResponding ? "opacity-50" : ""}`}>
                         <input
                             ref={inputRef}
                             type="text"
                             placeholder={t("input_placeholder")}
-                            className="flex-1 bg-transparent outline-none text-base px-2 rounded-full dark:text-white dark:placeholder-white"
+                            className="flex-1 min-w-0 bg-transparent outline-none text-base px-2 rounded-full dark:text-white dark:placeholder-white"
                             value={inputText}
                             onChange={handleInputChange}
                             onKeyDown={(e) => e.key === "Enter" && handleSend()}
