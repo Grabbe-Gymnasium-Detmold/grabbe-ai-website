@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, {useState, useRef, useEffect, useCallback} from "react";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
@@ -6,12 +6,14 @@ import rehypeHighlight from "rehype-highlight";
 import "katex/dist/katex.css";
 import "highlight.js/styles/github-dark.min.css";
 import Markdown from "react-markdown";
-import { BlueLink } from "@/components/BlueLink.tsx";
+import {BlueLink} from "@/components/BlueLink.tsx";
 import rehypeSemanticBlockquotes from "rehype-semantic-blockquotes";
-import { FaThumbsDown, FaThumbsUp } from "react-icons/fa";
-import { useToast } from "@/components/Toast.tsx";
-import { useTranslation } from "react-i18next";
+import {FaThumbsDown, FaThumbsUp} from "react-icons/fa";
+import {useToast} from "@/components/Toast.tsx";
+import {useTranslation} from "react-i18next";
 import twemoji from 'twemoji';
+
+
 
 const API_URL = "https://api.grabbe.site/chat";
 const AUTH_URL = "https://api.grabbe.site/auth";
@@ -33,34 +35,20 @@ const ChatPage: React.FC = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [disclaimer, setDisclaimer] = useState("");
 
+
     const { addToast } = useToast();
     const emojiContainerRef = useRef(null);
-    const dropdownRef = useRef<HTMLDivElement>(null); // Ref for detecting outside clicks
+
 
     const inputRef = useRef<HTMLInputElement>(null);
 
     const MAX_CHARACTERS = 150;
     const { t, i18n } = useTranslation();
-
-    const languages = [
-        { code: "ar", name: "Arabic", flag: "🇸🇦" },
-        { code: "de", name: "Deutsch", flag: "🇩🇪" },
-        { code: "en", name: "English", flag: "🇬🇧" },
-        { code: "ru", name: "Русский", flag: "🇷🇺" },
-        { code: "tr", name: "Türkçe", flag: "🇹🇷" },
-        { code: "uk", name: "Українська", flag: "🇺🇦" },
-    ];
-
-    // Determine the currently selected language based on i18n.language
-    const selectedLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
-
-    const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
-
     const changeLanguage = (lang: string) => {
         i18n.changeLanguage(lang);
         setIsDropdownOpen(false);
-    };
 
+    };
     const updateDisclaimer = () => {
         const updatedDisclaimer = t("disclaimer")
             .replace(
@@ -76,14 +64,24 @@ const ChatPage: React.FC = () => {
 
     useEffect(() => {
         updateDisclaimer();
-    }, [i18n.language]); // Update disclaimer when language changes
+    }, [i18n.language]); // i18n.language ändert sich bei Sprachwechsel
+
+    const languages = [
+        { code: "ar", name: "Arabic", flag: "🇸🇦" },
+        { code: "de", name: "Deutsch", flag: "🇩🇪" },
+        { code: "en", name: "English", flag: "🇬🇧" },
+        { code: "ru", name: "Русский", flag: "🇷🇺" },
+        { code: "tr", name: "Türkçe", flag: "🇹🇷" },
+        { code: "uk", name: "Українська", flag: "🇺🇦" },
+    ];
+    const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
 
     const authenticate = useCallback(async () => {
         try {
-            const authResponse = await fetch(AUTH_URL, { method: "GET", headers: { "Content-Type": "application/json" } });
+            const authResponse = await fetch(AUTH_URL, {method: "GET", headers: {"Content-Type": "application/json"}});
             if (!authResponse.ok) throw new Error("Authentication failed.");
 
-            const { token: authToken } = await authResponse.json();
+            const {token: authToken} = await authResponse.json();
             localStorage.setItem("session_token", authToken);
             setToken(authToken);
         } catch (error) {
@@ -126,23 +124,24 @@ const ChatPage: React.FC = () => {
         checkToken();
     }, [token, authenticate, validateToken]);
 
+
     useEffect(() => {
         const fetchExampleQuestions = async () => {
             if (!token) return;
 
-            const currentLanguage = i18n.language; // Current language
+            const currentLanguage = i18n.language; // Aktuelle Sprache ermitteln
 
             try {
                 const cacheKey = `example_questions`;
                 const reloadCounterKey = `reload_counter`;
 
-                // Load current counter from localStorage (default 0)
+                // Lade den aktuellen Zählerstand aus dem localStorage (Standardwert 0)
                 const reloadCounter = parseInt(localStorage.getItem(reloadCounterKey) || "0", 10);
 
-                // Check if cache should be invalidated
+                // Überprüfen, ob der Cache invalidiert werden soll
                 if (reloadCounter >= 4) {
-                    localStorage.removeItem(cacheKey); // Invalidate cache
-                    localStorage.setItem(reloadCounterKey, "1"); // Reset counter
+                    localStorage.removeItem(cacheKey); // Cache invalidieren
+                    localStorage.setItem(reloadCounterKey, "1"); // Zählerstand zurücksetzen
                 }
 
                 const cachedQuestions = localStorage.getItem(cacheKey);
@@ -166,7 +165,7 @@ const ChatPage: React.FC = () => {
                     setExampleQuestions(shuffleAndSlice(questions[currentLanguage], 4));
                 }
 
-                // Increment and save counter
+                // Zählerstand erhöhen und speichern
                 localStorage.setItem(reloadCounterKey, (reloadCounter + 1).toString());
             } catch (error) {
                 console.error(error);
@@ -179,6 +178,8 @@ const ChatPage: React.FC = () => {
         fetchExampleQuestions();
     }, [token, i18n.language]);
 
+
+
     useEffect(() => {
         const savedTheme = localStorage.getItem("theme");
         setIsDarkMode(savedTheme === "dark" || (savedTheme === null && window.matchMedia("(prefers-color-scheme: dark)").matches));
@@ -188,6 +189,7 @@ const ChatPage: React.FC = () => {
         localStorage.setItem("theme", isDarkMode ? "dark" : "light");
         document.documentElement.classList.toggle("dark", isDarkMode);
     }, [isDarkMode]);
+
 
     const shuffleAndSlice = (array: string[], count: number): string[] => {
         const shuffled = array.sort(() => 0.5 - Math.random());
@@ -199,7 +201,7 @@ const ChatPage: React.FC = () => {
 
         setIsBotResponding(true);
         setShowExampleCards(false);
-        const userMessage = { id: Date.now(), text: inputText.trim(), user: "You" as const, evaluation: "null" };
+        const userMessage = {id: Date.now(), text: inputText.trim(), user: "You" as const, evaluation: "null"};
         setMessages(prev => [...prev, userMessage]);
         setInputText("");
 
@@ -220,7 +222,7 @@ const ChatPage: React.FC = () => {
         }
 
         const botMessageId = Date.now() + 1;
-        setMessages(prev => [...prev, { id: botMessageId, text: "", user: "Bot" as const, evaluation: "null" }]);
+        setMessages(prev => [...prev, {id: botMessageId, text: "", user: "Bot" as const, evaluation: "null"}]);
 
         try {
             const response = await fetch(API_URL, {
@@ -230,7 +232,7 @@ const ChatPage: React.FC = () => {
                     Accept: "text/event-stream",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ question: userMessage.text, threadId: currentThreadId }),
+                body: JSON.stringify({question: userMessage.text, threadId: currentThreadId}),
             });
             if (!response.ok) throw new Error("Failed to fetch bot response.");
 
@@ -242,15 +244,15 @@ const ChatPage: React.FC = () => {
             let botMessageText = "";
 
             while (!done) {
-                const { value, done: readerDone } = await reader.read();
+                const {value, done: readerDone} = await reader.read();
                 done = readerDone;
-                const chunk = decoder.decode(value, { stream: true });
-                if (chunk.startsWith('{"done":true,')) {
-                    const { messageId } = JSON.parse(chunk);
-                    setMessages(prev => prev.map(msg => msg.id === botMessageId ? { ...msg, id: messageId } : msg));
-                } else {
+                const chunk = decoder.decode(value, {stream: true});
+                if(chunk.startsWith('{"done":true,')){
+                    const {messageId} = JSON.parse(chunk);
+                    setMessages(prev => prev.map(msg => msg.id === botMessageId ? {...msg, id: messageId} : msg));
+                }else{
                     botMessageText += chunk;
-                    setMessages(prev => prev.map(msg => msg.id === botMessageId ? { ...msg, text: botMessageText } : msg));
+                    setMessages(prev => prev.map(msg => msg.id === botMessageId ? {...msg, text: botMessageText} : msg));
                 }
 
             }
@@ -301,7 +303,7 @@ const ChatPage: React.FC = () => {
 
     const handleEvaluation = async (messageId: number, evaluation: "positive" | "negative") => {
         if (!threadId || !token) return;
-        setMessages(prev => prev.map(msg => msg.id === messageId ? { ...msg, evaluation } : msg));
+        setMessages(prev => prev.map(msg => msg.id === messageId ? {...msg, evaluation} : msg));
         try {
             const response = await fetch(EVALUATION_URL, {
                 method: "POST",
@@ -309,7 +311,7 @@ const ChatPage: React.FC = () => {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ threadId, messageId, evaluation }),
+                body: JSON.stringify({threadId, messageId, evaluation}),
             });
 
             if (!response.ok) {
@@ -318,38 +320,20 @@ const ChatPage: React.FC = () => {
             addToast("Danke für deine Bewertung der Nachricht!", "success", 5);
         } catch (error) {
             console.error(error);
-            addToast("Leider gab es einen Fehler beim Senden der Bewertung. Trotzdem danke!", "error", 5);
+            addToast("Leider gab es einen Fehler beim senden der Bewertung. Tortzdem danke!", "success", 5);
         }
     };
-
     useEffect(() => {
-        // Parse emojis with Twemoji after render
+        // Emojis mit Twemoji parsen, sobald der Komponenten-Render abgeschlossen ist
         if (emojiContainerRef.current) {
             twemoji.parse(emojiContainerRef.current);
         }
     }, [emojiContainerRef]);
 
-    // Handle clicks outside the dropdown to close it
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsDropdownOpen(false);
-            }
-        };
-        if (isDropdownOpen) {
-            document.addEventListener("mousedown", handleClickOutside);
-        } else {
-            document.removeEventListener("mousedown", handleClickOutside);
-        }
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, [isDropdownOpen]);
-
     return (
         <div className="bg-white text-gray-800 flex justify-center items-center min-h-screen dark:bg-gray-800">
 
-            <div className="bg-white text-gray-800 dark:bg-gray-800 dark:text-white w-full">
+            <div className="bg-white text-gray-800 dark:bg-gray-800 dark:text-white">
                 <div className="p-4 dark:bg-gray-800 dark:text-white bg-white text-black">
                     {errorMessage && (
                         <div
@@ -361,57 +345,33 @@ const ChatPage: React.FC = () => {
 
                 <div>
                     <div className="container mx-auto max-w-xl p-10 flex flex-col items-center relative">
-                        {/* New Language Dropdown */}
-                        <div className="absolute top-4 right-4" ref={dropdownRef}>
-                            <div className="relative">
+                        <div className="absolute top-0 right-0 mt-4 mr-4">
+                            <div className="relative inline-block text-left" ref={emojiContainerRef}>
                                 <button
                                     onClick={toggleDropdown}
-                                    className="bg-white text-gray-500 rounded shadow-lg py-2 pr-3 pl-5 focus:outline-none flex items-center"
+                                    className="flex items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-xl text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none"
                                 >
-                                    <span className="mr-2 text-lg">{selectedLanguage.flag}</span>
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                         xmlns="http://www.w3.org/2000/svg">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                              d="M19 9l-7 7-7-7"></path>
-                                    </svg>
+                                    🌐 {t("language")} <span
+                                    className="ml-2">{!isDropdownOpen ? (<>&#x25BC;</>) : (<>&#x25b2;</>)}</span>
                                 </button>
                                 {isDropdownOpen && (
                                     <div
-                                        className="bg-white text-gray-700 shadow-md rounded text-sm absolute right-0 mt-2 min-w-full w-48 z-30 transition transform origin-top-right"
-                                    >
-                                        <span
-                                            className="absolute top-0 right-0 w-3 h-3 bg-white transform rotate-45 -mt-1 mr-3"></span>
-                                        <div className="bg-white overflow-auto rounded w-full relative z-10">
-                                            <ul className="list-none">
-                                                {languages.map((lang) => (
-                                                    <li key={lang.code}>
-                                                        <button
-                                                            onClick={() => changeLanguage(lang.code)}
-                                                            className="px-4 py-2 flex items-center hover:bg-gray-100 transition-colors duration-100 w-full text-left"
-                                                        >
-                                                            <span className="inline-block mr-2 text-lg">{lang.flag}</span>
-                                                            <span className="inline-block">{lang.name}</span>
-                                                            {i18n.language === lang.code && (
-                                                                <span className="ml-auto">
-                                                                    <svg className="w-4 h-4 text-green-500" fill="none"
-                                                                         stroke="currentColor" viewBox="0 0 24 24"
-                                                                         xmlns="http://www.w3.org/2000/svg">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round"
-                                                                              strokeWidth="2"
-                                                                              d="M5 13l4 4L19 7"></path>
-                                                                    </svg>
-                                                                </span>
-                                                            )}
-                                                        </button>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
+                                        className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg z-10">
+                                        {languages.map((lang) => (
+                                            <button
+                                                key={lang.code}
+                                                onClick={() => changeLanguage(lang.code)}
+                                                className="flex items-center w-full px-4 py-2 text-left text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl"
+                                            >
+                                                <span className="mr-2">{lang.flag}</span>
+                                                {lang.name}
+                                            </button>
+                                        ))}
                                     </div>
                                 )}
                             </div>
                         </div>
-                        {/* End of Language Dropdown */}
+
 
                         <div className="title text-2xl font-semibold mb-4">{t('title')}</div>
                         <div className="subtitle text-base text-gray-600 mb-10">
@@ -429,8 +389,8 @@ const ChatPage: React.FC = () => {
                                             handleSend();
                                         }}
                                     >
-                                        {question}
-                                    </span>
+                {question}
+            </span>
                                 ))}
                             </div>
 
@@ -458,23 +418,23 @@ const ChatPage: React.FC = () => {
                                     {!isBotResponding && (
                                         <div
                                             className="absolute transform translate-x-4 translate-y-4 opacity-0 group-hover:opacity-100 flex space-x-2">
-                                            {msg.evaluation === "null" && (
+                                            {msg.evaluation == "null" && (
                                                 <>
                                                     <FaThumbsUp
                                                         onClick={() => handleEvaluation(msg.id, "positive")}
-                                                        className="text-lg text-green-500 cursor-pointer hover:scale-110 transition-transform duration-300" />
+                                                        className="text-lg text-green-500 cursor-pointer hover:scale-110 transition-transform duration-300"/>
                                                     <FaThumbsDown
                                                         onClick={() => handleEvaluation(msg.id, "negative")}
-                                                        className="text-lg text-red-500 cursor-pointer hover:scale-110 transition-transform duration-300" />
+                                                        className="text-lg text-red-500 cursor-pointer hover:scale-110 transition-transform duration-300"/>
                                                 </>
                                             )}
-                                            {msg.evaluation === "positive" && (
+                                            {msg.evaluation == "positive" && (
                                                 <FaThumbsUp
-                                                    className="text-lg text-green-500 cursor-default hover:scale-100 transition-none" />
+                                                    className="text-lg text-green-500 cursor-default hover:scale-100 transition-none"/>
                                             )}
-                                            {msg.evaluation === "negative" && (
+                                            {msg.evaluation == "negative" && (
                                                 <FaThumbsDown
-                                                    className="text-lg text-red-500 cursor-default hover:scale-100 transition-none" />
+                                                    className="text-lg text-red-500 cursor-default hover:scale-100 transition-none"/>
                                             )}
                                         </div>
                                     )}
@@ -527,7 +487,7 @@ const ChatPage: React.FC = () => {
                         </div>
 
                         <div className="mt-2 text-center text-gray-600 dark:text-gray-600 text-xs">
-                            <span dangerouslySetInnerHTML={{ __html: disclaimer }} />
+                            <span dangerouslySetInnerHTML={{__html: disclaimer}}/>
                         </div>
 
 
@@ -537,7 +497,8 @@ const ChatPage: React.FC = () => {
             </div>
 
         </div>
-    );
+    )
+        ;
 };
 
 export default ChatPage;
