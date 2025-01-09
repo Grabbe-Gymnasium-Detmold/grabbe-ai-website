@@ -13,8 +13,6 @@ import { useToast } from "@/components/Toast.tsx";
 import { useTranslation } from "react-i18next";
 import twemoji from 'twemoji';
 
-
-
 const API_URL = "https://api.grabbe.site/chat";
 const AUTH_URL = "https://api.grabbe.site/auth";
 const THREAD_URL = "https://api.grabbe.site/thread/create";
@@ -71,7 +69,6 @@ const ChatPage: React.FC = () => {
         { code: "tr", name: "Türkçe", flag: "🇹🇷" },
         { code: "uk", name: "Українська", flag: "🇺🇦" },
     ];
-    const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
 
     const authenticate = useCallback(async () => {
         try {
@@ -313,7 +310,7 @@ const ChatPage: React.FC = () => {
             addToast("Danke für deine Bewertung der Nachricht!", "success", 5);
         } catch (error) {
             console.error(error);
-            addToast("Leider gab es einen Fehler beim senden der Bewertung. Trotzdem danke!", "error", 5);
+            addToast("Leider gab es einen Fehler beim Senden der Bewertung. Trotzdem danke!", "error", 5);
         }
     };
 
@@ -357,7 +354,7 @@ const ChatPage: React.FC = () => {
                                     <span className="absolute top-0 right-0 w-3 h-3 bg-white dark:bg-gray-700 transform rotate-45 -mt-1 mr-3"></span>
                                     <div className="bg-white dark:bg-gray-700 overflow-auto rounded w-full relative z-10">
                                         <ul className="list-reset">
-                                            {languages.map((lang, index) => (
+                                            {languages.map((lang) => (
                                                 <li key={lang.code}>
                                                     <button
                                                         className={`w-full text-left px-4 py-2 flex items-center hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-100 ${
@@ -429,7 +426,7 @@ const ChatPage: React.FC = () => {
                                     {!isBotResponding && (
                                         <div
                                             className="absolute transform translate-x-4 translate-y-4 opacity-0 group-hover:opacity-100 flex space-x-2">
-                                            {msg.evaluation == "null" && (
+                                            {msg.evaluation === "null" && (
                                                 <>
                                                     <FaThumbsUp
                                                         onClick={() => handleEvaluation(msg.id, "positive")}
@@ -439,11 +436,11 @@ const ChatPage: React.FC = () => {
                                                         className="text-lg text-red-500 cursor-pointer hover:scale-110 transition-transform duration-300" />
                                                 </>
                                             )}
-                                            {msg.evaluation == "positive" && (
+                                            {msg.evaluation === "positive" && (
                                                 <FaThumbsUp
                                                     className="text-lg text-green-500 cursor-default hover:scale-100 transition-none" />
                                             )}
-                                            {msg.evaluation == "negative" && (
+                                            {msg.evaluation === "negative" && (
                                                 <FaThumbsDown
                                                     className="text-lg text-red-500 cursor-default hover:scale-100 transition-none" />
                                             )}
@@ -509,6 +506,7 @@ const ChatPage: React.FC = () => {
 
         </div>
     );
+
 };
 
 export default ChatPage;
