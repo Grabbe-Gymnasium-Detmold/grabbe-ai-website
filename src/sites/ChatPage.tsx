@@ -12,6 +12,7 @@ import { FaThumbsDown, FaThumbsUp } from "react-icons/fa";
 import { useToast } from "@/components/Toast.tsx";
 import { useTranslation } from "react-i18next";
 import twemoji from 'twemoji';
+import { MdChevronDown, MdCheck } from "react-icons/md"; // Importiere die benötigten Icons
 
 const API_URL = "https://api.grabbe.site/chat";
 const AUTH_URL = "https://api.grabbe.site/auth";
@@ -322,10 +323,57 @@ const ChatPage: React.FC = () => {
     }, [emojiContainerRef]);
 
     return (
-        <div className="bg-white text-gray-800 flex justify-center items-center min-h-screen dark:bg-gray-800">
+        <div className="bg-white text-gray-800 flex justify-center items-center min-h-screen dark:bg-gray-800 relative">
+            {/* Beginn des neuen Language Dropdowns */}
+            <div className="fixed top-4 right-4 z-50">
+                <div className="relative">
+                    <button
+                        className="bg-white text-gray-500 dark:bg-gray-700 dark:text-white rounded shadow-lg py-2 pr-3 pl-5 focus:outline-none flex items-center"
+                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    >
+                        <span className="inline-block mr-2 text-xl">
+                            {languages.find(lang => lang.code === i18n.language)?.flag || "🌐"}
+                        </span>
+                        <MdChevronDown className="text-xl" />
+                    </button>
+                    {isDropdownOpen && (
+                        <div
+                            className="bg-white dark:bg-gray-700 text-gray-700 dark:text-white shadow-md rounded text-sm absolute right-0 mt-2 w-48 z-30"
+                            onClick={() => setIsDropdownOpen(false)} // Schließe das Dropdown beim Klicken außerhalb
+                        >
+                            <span className="absolute top-0 right-0 w-3 h-3 bg-white dark:bg-gray-700 transform rotate-45 -mt-1 mr-3"></span>
+                            <div className="overflow-auto rounded w-full relative z-10">
+                                <ul className="list-none p-0 m-0">
+                                    {languages.map((lang) => (
+                                        <li key={lang.code}>
+                                            <button
+                                                className={`w-full text-left px-4 py-2 flex items-center hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-100 ${
+                                                    lang.code === i18n.language ? 'font-semibold' : ''
+                                                }`}
+                                                onClick={() => changeLanguage(lang.code)}
+                                            >
+                                                <span className="inline-block mr-2 text-xl">
+                                                    {lang.flag}
+                                                </span>
+                                                <span className="inline-block">{lang.name}</span>
+                                                {lang.code === i18n.language && (
+                                                    <span className="ml-auto">
+                                                        <MdCheck className="text-lg" />
+                                                    </span>
+                                                )}
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+            {/* Ende des neuen Language Dropdowns */}
 
-            <div className="bg-white text-gray-800 dark:bg-gray-800 dark:text-white">
-                <div className="p-4 dark:bg-gray-800 dark:text-white bg-white text-black">
+            <div className="bg-white text-gray-800 dark:bg-gray-800 dark:text-white w-full max-w-xl p-10 flex flex-col items-center">
+                <div className="p-4 dark:bg-gray-800 dark:text-white bg-white text-black w-full">
                     {errorMessage && (
                         <div
                             className="mb-4 p-3 border-l-4 border-red-500 bg-red-100 text-red-800 rounded dark:bg-red-900 dark:text-red-300">
@@ -334,174 +382,125 @@ const ChatPage: React.FC = () => {
                     )}
                 </div>
 
-                <div>
-                    <div className="container mx-auto max-w-xl p-10 flex flex-col items-center relative">
-                        {/* Beginn des neuen Language Dropdowns */}
-                        <div className="relative pb-5">
-                            <button
-                                className="bg-white text-gray-500 rounded shadow-lg py-2 pr-3 pl-5 focus:outline-none flex items-center"
-                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                            >
-                                <span className="inline-block mr-2 text-xl">
-                                    {languages.find(lang => lang.code === i18n.language)?.flag || "🌐"}
+                <div className="container mx-auto max-w-xl p-10 flex flex-col items-center relative">
+                    <div className="title text-2xl font-semibold mb-4">{t('title')}</div>
+                    <div className="subtitle text-base text-gray-600 mb-10">
+                        {t('subtitle')}
+                    </div>
+
+                    {showExampleCards && (
+                        <div className="suggestions flex flex-wrap justify-center gap-5 mb-16 w-full">
+                            {exampleQuestions.map((question, idx) => (
+                                <span
+                                    key={idx}
+                                    className="suggestion-box border border-gray-200 bg-gray-50 text-wrap dark:text-white dark:bg-gray-700 dark:border-opacity-0 rounded-xl py-4 px-5 text-base text-gray-800 shadow-md hover:bg-gray-200 cursor-pointer min-w-[150px] max-w-[200px] text-center overflow-hidden text-ellipsis whitespace-nowrap flex items-center justify-center"
+                                    onClick={() => {
+                                        setInputText(question);
+                                        handleSend();
+                                    }}
+                                >
+                                    {question}
                                 </span>
-                                <i className="mdi mdi-chevron-down"></i>
-                            </button>
-                            {isDropdownOpen && (
-                                <div
-                                    className="bg-white text-gray-700 shadow-md rounded text-sm absolute mt-2 right-0 min-w-full w-48 z-30 dark:bg-gray-700 dark:text-white"
-                                >
-                                    <span className="absolute top-0 right-0 w-3 h-3 bg-white dark:bg-gray-700 transform rotate-45 -mt-1 mr-3"></span>
-                                    <div className="bg-white dark:bg-gray-700 overflow-auto rounded w-full relative z-10">
-                                        <ul className="list-reset">
-                                            {languages.map((lang) => (
-                                                <li key={lang.code}>
-                                                    <button
-                                                        className={`w-full text-left px-4 py-2 flex items-center hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-100 ${
-                                                            lang.code === i18n.language ? 'font-semibold' : ''
-                                                        }`}
-                                                        onClick={() => changeLanguage(lang.code)}
-                                                    >
-                                                        <span className="inline-block mr-2 text-xl">
-                                                            {lang.flag}
-                                                        </span>
-                                                        <span className="inline-block">{lang.name}</span>
-                                                        {lang.code === i18n.language && (
-                                                            <span className="ml-auto">
-                                                                <i className="mdi mdi-check"></i>
-                                                            </span>
-                                                        )}
-                                                    </button>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                        {/* Ende des neuen Language Dropdowns */}
-
-                        <div className="title text-2xl font-semibold mb-4">{t('title')}</div>
-                        <div className="subtitle text-base text-gray-600 mb-10">
-                            {t('subtitle')}
-                        </div>
-
-                        {showExampleCards && (
-                            <div className="suggestions flex flex-wrap justify-center gap-5 mb-16 w-full">
-                                {exampleQuestions.map((question, index) => (
-                                    <span
-                                        key={index}
-                                        className="suggestion-box border border-gray-200 bg-gray-50 text-wrap dark:text-white dark:bg-gray-700 dark:border-opacity-0 rounded-xl py-4 px-5 text-base text-gray-800 shadow-md hover:bg-gray-200 cursor-pointer min-w-[150px] max-w-[200px] text-center overflow-hidden text-ellipsis whitespace-nowrap flex items-center justify-center"
-                                        onClick={() => {
-                                            setInputText(question);
-                                            handleSend();
-                                        }}
-                                    >
-                                        {question}
-                                    </span>
-                                ))}
-                            </div>
-
-                        )}
-
-                        <div className="w-full flex flex-col gap-4">
-                            {messages.map((msg) => (
-                                <div
-                                    key={msg.id}
-                                    className={`p-3 rounded-2xl text-sm shadow-sm transition-all transform  ${
-                                        msg.user === "You"
-                                            ? "dark:bg-gray-500 dark:text-white self-end bg-blue-200"
-                                            : "dark:bg-gray-700 dark:text-white self-start bg-gray-100 relative group"
-                                    }`}
-                                >
-                                    <Markdown
-                                        remarkPlugins={[remarkGfm, remarkMath]}
-                                        rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeSemanticBlockquotes]}
-                                        components={{
-                                            a: (props) => <BlueLink {...props} />,
-                                        }}
-                                    >
-                                        {msg.text}
-                                    </Markdown>
-                                    {!isBotResponding && (
-                                        <div
-                                            className="absolute transform translate-x-4 translate-y-4 opacity-0 group-hover:opacity-100 flex space-x-2">
-                                            {msg.evaluation === "null" && (
-                                                <>
-                                                    <FaThumbsUp
-                                                        onClick={() => handleEvaluation(msg.id, "positive")}
-                                                        className="text-lg text-green-500 cursor-pointer hover:scale-110 transition-transform duration-300" />
-                                                    <FaThumbsDown
-                                                        onClick={() => handleEvaluation(msg.id, "negative")}
-                                                        className="text-lg text-red-500 cursor-pointer hover:scale-110 transition-transform duration-300" />
-                                                </>
-                                            )}
-                                            {msg.evaluation === "positive" && (
-                                                <FaThumbsUp
-                                                    className="text-lg text-green-500 cursor-default hover:scale-100 transition-none" />
-                                            )}
-                                            {msg.evaluation === "negative" && (
-                                                <FaThumbsDown
-                                                    className="text-lg text-red-500 cursor-default hover:scale-100 transition-none" />
-                                            )}
-                                        </div>
-                                    )}
-
-                                </div>
                             ))}
                         </div>
+                    )}
 
-                        {inputText.length > MAX_CHARACTERS && (
-                            <div className="text-red-500 text-sm mb-2">
-                                {t('input_character_limit')}
+                    <div className="w-full flex flex-col gap-4">
+                        {messages.map((msg) => (
+                            <div
+                                key={msg.id}
+                                className={`p-3 rounded-2xl text-sm shadow-sm transition-all transform ${
+                                    msg.user === "You"
+                                        ? "dark:bg-gray-500 dark:text-white self-end bg-blue-200"
+                                        : "dark:bg-gray-700 dark:text-white self-start bg-gray-100 relative group"
+                                }`}
+                            >
+                                <Markdown
+                                    remarkPlugins={[remarkGfm, remarkMath]}
+                                    rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeSemanticBlockquotes]}
+                                    components={{
+                                        a: (props) => <BlueLink {...props} />,
+                                    }}
+                                >
+                                    {msg.text}
+                                </Markdown>
+                                {!isBotResponding && (
+                                    <div
+                                        className="absolute transform translate-x-4 translate-y-4 opacity-0 group-hover:opacity-100 flex space-x-2">
+                                        {msg.evaluation === "null" && (
+                                            <>
+                                                <FaThumbsUp
+                                                    onClick={() => handleEvaluation(msg.id, "positive")}
+                                                    className="text-lg text-green-500 cursor-pointer hover:scale-110 transition-transform duration-300" />
+                                                <FaThumbsDown
+                                                    onClick={() => handleEvaluation(msg.id, "negative")}
+                                                    className="text-lg text-red-500 cursor-pointer hover:scale-110 transition-transform duration-300" />
+                                            </>
+                                        )}
+                                        {msg.evaluation === "positive" && (
+                                            <FaThumbsUp
+                                                className="text-lg text-green-500 cursor-default hover:scale-100 transition-none" />
+                                        )}
+                                        {msg.evaluation === "negative" && (
+                                            <FaThumbsDown
+                                                className="text-lg text-red-500 cursor-default hover:scale-100 transition-none" />
+                                        )}
+                                    </div>
+                                )}
+
+                            </div>
+                        ))}
+                    </div>
+
+                    {inputText.length > MAX_CHARACTERS && (
+                        <div className="text-red-500 text-sm mb-2">
+                            {t('input_character_limit')}
+                        </div>
+                    )}
+
+                    <div className="input-area-wrapper w-full flex justify-center mt-6 relative">
+                        {isBotResponding && (
+                            <div className="absolute top-0 left-0 w-full h-full flex justify-center items-center">
+                                <div className="h-4 w-4 dark:bg-gray-700 rounded-full animate-pulse"></div>
                             </div>
                         )}
-
-                        <div className="input-area-wrapper w-full flex justify-center mt-6 relative">
-                            {isBotResponding && (
-                                <div className="absolute top-0 left-0 w-full h-full flex justify-center items-center">
-                                    <div className="h-4 w-4 dark:bg-gray-700 rounded-full animate-pulse"></div>
-                                </div>
-                            )}
-                            <div
-                                className={`input-area flex items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-3 w-full max-w-xl ${isBotResponding ? "opacity-50" : ""}`}>
-                                <input
-                                    ref={inputRef}
-                                    type="text"
-                                    placeholder={t("input_placeholder")}
-                                    className="flex-1 bg-transparent outline-none text-base px-2 rounded-full dark:text-white dark:placeholder-white"
-                                    value={inputText}
-                                    onChange={handleInputChange}
-                                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                                    disabled={isBotResponding}
+                        <div
+                            className={`input-area flex items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-3 w-full max-w-xl ${isBotResponding ? "opacity-50" : ""}`}>
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                placeholder={t("input_placeholder")}
+                                className="flex-1 bg-transparent outline-none text-base px-2 rounded-full dark:text-white dark:placeholder-white"
+                                value={inputText}
+                                onChange={handleInputChange}
+                                onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                                disabled={isBotResponding}
+                            />
+                            <button
+                                aria-label="Send prompt"
+                                className="send-button flex items-center justify-center h-10 w-10 rounded-full bg-black text-white hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-black dark:bg-gray-600 dark:hover:bg-gray-500"
+                                onClick={handleSend}
+                                disabled={isBotResponding || !token || inputText.length > MAX_CHARACTERS}
+                            >
+                                <img
+                                    src="/send.svg"
+                                    alt="Send Icon"
+                                    width="32"
+                                    height="32"
+                                    className="filter invert-[1] dark:invert-[1]"
                                 />
-                                <button
-                                    aria-label="Send prompt"
-                                    className="send-button flex items-center justify-center h-10 w-10 rounded-full bg-black text-white hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-black dark:bg-gray-600 dark:hover:bg-gray-500"
-                                    onClick={handleSend}
-                                    disabled={isBotResponding || !token || inputText.length > MAX_CHARACTERS}
-                                >
-                                    <img
-                                        src="/send.svg"
-                                        alt="Send Icon"
-                                        width="32"
-                                        height="32"
-                                        className="filter invert-[1] dark:invert-[1]"
-                                    />
-                                </button>
-
-                            </div>
+                            </button>
 
                         </div>
-
-                        <div className="mt-2 text-center text-gray-600 dark:text-gray-600 text-xs">
-                            <span dangerouslySetInnerHTML={{ __html: disclaimer }} />
-                        </div>
-
 
                     </div>
-                </div>
 
+                    <div className="mt-2 text-center text-gray-600 dark:text-gray-600 text-xs">
+                        <span dangerouslySetInnerHTML={{ __html: disclaimer }} />
+                    </div>
+
+
+                </div>
             </div>
 
         </div>
