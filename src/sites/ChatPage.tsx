@@ -366,7 +366,7 @@ const ChatPage: React.FC = () => {
                             <div className="relative">
                                 <button
                                     onClick={toggleDropdown}
-                                    className="bg-white text-gray-500 rounded shadow-lg py-2 pr-3 pl-5 focus:outline-none flex items-center"
+                                    className="bg-white text-gray-500 rounded shadow-lg py-2 pr-3 pl-5 focus:outline-none flex items-center dark:bg-gray-800"
                                 >
                                     <span className="mr-2 text-lg">{selectedLanguage.flag}</span>
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -377,7 +377,7 @@ const ChatPage: React.FC = () => {
                                 </button>
                                 {isDropdownOpen && (
                                     <div
-                                        className="bg-white text-gray-700 shadow-md rounded text-sm absolute right-0 mt-2 min-w-full w-48 z-30 transition transform origin-top-right"
+                                        className="bg-white text-gray-700 shadow-md rounded text-sm absolute right-0 mt-2 min-w-full w-48 z-30 transition transform origin-top-right dark:bg-gray-800 "
                                     >
                                         <span
                                             className="absolute top-0 right-0 w-3 h-3 bg-white transform rotate-45 -mt-1 mr-3"></span>
