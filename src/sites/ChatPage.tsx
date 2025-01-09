@@ -12,7 +12,7 @@ import { FaThumbsDown, FaThumbsUp } from "react-icons/fa";
 import { useToast } from "@/components/Toast.tsx";
 import { useTranslation } from "react-i18next";
 import twemoji from 'twemoji';
-import { MdKeyboardArrowDown, MdCheck } from "react-icons/md"; // Korrigierter Import
+import { MdArrowDropDown, MdCheck } from "react-icons/md"; // Korrigierter Import
 
 const API_URL = "https://api.grabbe.site/chat";
 const AUTH_URL = "https://api.grabbe.site/auth";
@@ -342,7 +342,7 @@ const ChatPage: React.FC = () => {
         <div className="bg-white text-gray-800 flex justify-center items-center min-h-screen dark:bg-gray-800 relative">
 
             {/* Beginn des neuen Language Dropdowns */}
-            <div className="fixed top-4 right-4 z-50" ref={dropdownRef}>
+            <div className="absolute top-4 right-4 z-50" ref={dropdownRef}>
                 <div className="relative">
                     <button
                         className="bg-white text-gray-500 dark:bg-gray-700 dark:text-white rounded shadow-lg py-2 pr-3 pl-5 focus:outline-none flex items-center"
@@ -354,7 +354,7 @@ const ChatPage: React.FC = () => {
                         <span className="inline-block mr-2 text-xl">
                             {languages.find(lang => lang.code === i18n.language)?.flag || "🌐"}
                         </span>
-                        <MdKeyboardArrowDown className="text-xl" /> {/* Korrigiertes Icon */}
+                        <MdArrowDropDown className="text-xl" /> {/* Korrigiertes Icon */}
                     </button>
                     {isDropdownOpen && (
                         <div
