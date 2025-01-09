@@ -461,7 +461,7 @@ const ChatPage: React.FC = () => {
                                         <>
                                             {/* Daumen Hoch Button */}
                                             <button
-                                                className="rounded-full text-token-text-secondary hover:bg-token-main-surface-secondary p-1"
+                                                className="rounded-full text-gray-800 hover:bg-gray-200 p-1" // Geändert
                                                 aria-label="Good response"
                                                 data-testid="good-response-turn-action-button"
                                                 onClick={() => handleEvaluation(msg.id, "positive")}
@@ -472,7 +472,7 @@ const ChatPage: React.FC = () => {
                                             </button>
                                             {/* Daumen Runter Button */}
                                             <button
-                                                className="rounded-full text-token-text-secondary hover:bg-token-main-surface-secondary p-1"
+                                                className="rounded-full text-gray-800 hover:bg-gray-200 p-1" // Geändert
                                                 aria-label="Bad response"
                                                 data-testid="bad-response-turn-action-button"
                                                 onClick={() => handleEvaluation(msg.id, "negative")}
@@ -485,7 +485,7 @@ const ChatPage: React.FC = () => {
                                     )}
                                     {msg.evaluation === "positive" && (
                                         <button
-                                            className="rounded-full text-token-text-secondary cursor-default p-1"
+                                            className="rounded-full text-gray-800 cursor-default p-1" // Geändert
                                             aria-label="Good response"
                                             data-testid="good-response-turn-action-button"
                                             disabled
@@ -497,7 +497,7 @@ const ChatPage: React.FC = () => {
                                     )}
                                     {msg.evaluation === "negative" && (
                                         <button
-                                            className="rounded-full text-token-text-secondary cursor-default p-1"
+                                            className="rounded-full text-gray-800 cursor-default p-1" // Geändert
                                             aria-label="Bad response"
                                             data-testid="bad-response-turn-action-button"
                                             disabled
