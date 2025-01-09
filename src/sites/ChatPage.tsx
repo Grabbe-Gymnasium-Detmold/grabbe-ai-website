@@ -485,12 +485,6 @@ const ChatPage: React.FC = () => {
                             <div className="h-4 w-4 dark:bg-gray-700 rounded-full animate-pulse"></div>
                         </div>
                     )}
-                     <div className="input-area-wrapper w-full flex justify-center mt-6 relative">
-                    {isBotResponding && (
-                        <div className="absolute top-0 left-0 w-full h-full flex justify-center items-center">
-                            <div className="h-4 w-4 dark:bg-gray-700 rounded-full animate-pulse"></div>
-                        </div>
-                    )}
                     <div
                         className={`input-area flex flex-nowrap items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-3 w-full ${isBotResponding ? "opacity-50" : ""}`}>
                         <input
