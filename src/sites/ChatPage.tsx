@@ -513,6 +513,7 @@ const ChatPage: React.FC = () => {
                                 </button>
 
                             </div>
+                    </div>
 
                 <div className="mt-2 text-center text-gray-600 dark:text-gray-600 text-xs">
                     <span dangerouslySetInnerHTML={{ __html: disclaimer }} />
