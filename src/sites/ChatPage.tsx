@@ -346,7 +346,7 @@ const ChatPage: React.FC = () => {
             <div className="absolute top-4 right-4 z-50" ref={dropdownRef}>
                 <div className="relative">
                     <button
-                        className="bg-white text-gray-500 dark:bg-gray-700 dark:text-white rounded shadow-lg py-2 pr-3 pl-5 focus:outline-none flex items-center"
+                        className="bg-white text-gray-500 dark:bg-gray-700 dark:text-white rounded-xl shadow-lg py-2 pr-3 pl-5 focus:outline-none flex items-center"
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                         aria-haspopup="true"
                         aria-expanded={isDropdownOpen}
@@ -361,7 +361,7 @@ const ChatPage: React.FC = () => {
                         <div
                             id="language-dropdown"
                             role="menu"
-                            className="bg-white dark:bg-gray-700 text-gray-700 dark:text-white shadow-md rounded text-sm absolute right-0 mt-2 w-48 z-30"
+                            className="bg-white dark:bg-gray-700 text-gray-700 dark:text-white shadow-md rounded-xl text-sm absolute right-0 mt-2 w-48 z-30"
                         >
                             <span className="absolute top-0 right-0 w-3 h-3 bg-white dark:bg-gray-700 transform rotate-45 -mt-1 mr-3"></span>
                             <div className="overflow-auto rounded w-full relative z-10">
