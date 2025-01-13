@@ -548,7 +548,7 @@ const ChatPage: React.FC = () => {
                                 alt="Send Icon"
                                 width="32"
                                 height="32"
-                                className="filter invert-[1] dark:invert-[1]"
+                                className="filter invert-[1] dark:invert-[1] rotate-90"
                             />
                         </button>
                     </div>
