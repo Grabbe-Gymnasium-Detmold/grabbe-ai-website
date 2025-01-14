@@ -7,6 +7,15 @@ export default {
     ],
     theme: {
         extend: {
+            animation: {
+                bounce: "bounce 1.2s infinite",
+            },
+            keyframes: {
+                bounce: {
+                    "0%, 100%": { transform: "translateY(0)" },
+                    "50%": { transform: "translateY(-10px)" },
+                },
+            },
             borderRadius: {
                 lg: 'var(--radius)',
                 md: 'calc(var(--radius) - 2px)',
