@@ -95,4 +95,4 @@ This code is the property of Grabbe-Gymnasium Detmold and is intended for intern
 
 ---
 
-For questions or issues, please contact the project maintainers via the internal communication channels at Grabbe-Gymnasium Detmold (IServ) or via mail (`finnbusse@outlook.de`,`kontakt@maximilianvonbeck.de`)
+For questions or issues, please contact the project maintainers via the internal communication channels at Grabbe-Gymnasium Detmold (IServ) or via mail (`grabbeai@finnbusse.de`,`kontakt@maximilianvonbeck.de`)
