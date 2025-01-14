@@ -524,8 +524,11 @@ const ChatPage: React.FC = () => {
                         <div className="absolute top-0 left-0 w-full h-full flex justify-center items-center">
                             <div className="h-4 w-4 dark:bg-gray-700 rounded-full animate-pulse"></div>
                         </div>
-{// Lade animation}
-                    )}
+
+                    )
+//Lade animation
+
+}
                     <div
                         className={`input-area flex flex-nowrap items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-3 w-full ${isBotResponding ? "opacity-50" : ""}`}>
                         <input
