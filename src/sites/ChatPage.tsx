@@ -127,8 +127,8 @@ const ChatPage: React.FC = () => {
             const currentLanguage = i18n.language; // Aktuelle Sprache ermitteln
 
             try {
-                const cacheKey = `example_questions`;
-                const reloadCounterKey = `reload_counter`;
+                const cacheKey = `example_questions_${currentLanguage}`;
+                const reloadCounterKey = `reload_counter_${currentLanguage}`;
 
                 // Lade den aktuellen Zählerstand aus dem localStorage (Standardwert 0)
                 const reloadCounter = parseInt(localStorage.getItem(reloadCounterKey) || "0", 10);
@@ -143,7 +143,7 @@ const ChatPage: React.FC = () => {
 
                 if (cachedQuestions) {
                     const parsedQuestions = JSON.parse(cachedQuestions);
-                    setExampleQuestions(shuffleAndSlice(parsedQuestions[currentLanguage], 4));
+                    setExampleQuestions(shuffleAndSlice(parsedQuestions, 4));
                 } else {
                     const qResponse = await fetch(`${EXAMPLE_QUESTION_URL}`, {
                         method: "GET",
@@ -157,7 +157,7 @@ const ChatPage: React.FC = () => {
 
                     const { questions } = await qResponse.json();
                     localStorage.setItem(cacheKey, JSON.stringify(questions));
-                    setExampleQuestions(shuffleAndSlice(questions[currentLanguage], 4));
+                    setExampleQuestions(shuffleAndSlice(questions, 4));
                 }
 
                 // Zählerstand erhöhen und speichern
@@ -437,23 +437,35 @@ const ChatPage: React.FC = () => {
                                     : "items-start"
                             }`}
                         >
-                            <div
-                                className={`p-3 rounded-2xl text-sm shadow-sm transition-all transform ${
-                                    msg.user === "You"
-                                        ? "dark:bg-gray-500 dark:text-white bg-blue-200"
-                                        : "dark:bg-gray-700 dark:text-white bg-gray-100"
-                                }`}
-                            >
-                                <Markdown
-                                    remarkPlugins={[remarkGfm, remarkMath]}
-                                    rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeSemanticBlockquotes]}
-                                    components={{
-                                        a: (props) => <BlueLink {...props} />,
-                                    }}
+                            {/* Bedingte Darstellung: Ladeanimation oder Nachrichtenblase */}
+                            {msg.user === "Bot" && msg.text === "" ? (
+                                <div className="p-3 rounded-2xl text-sm shadow-sm transition-all transform dark:bg-gray-700 dark:text-white bg-gray-100 flex items-center">
+                                    <svg className="animate-spin h-5 w-5 mr-3 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                    </svg>
+                                    <span>Wird generiert...</span>
+                                </div>
+                            ) : (
+                                <div
+                                    className={`p-3 rounded-2xl text-sm shadow-sm transition-all transform ${
+                                        msg.user === "You"
+                                            ? "dark:bg-gray-500 dark:text-white bg-blue-200"
+                                            : "dark:bg-gray-700 dark:text-white bg-gray-100"
+                                    }`}
                                 >
-                                    {msg.text}
-                                </Markdown>
-                            </div>
+                                    <Markdown
+                                        remarkPlugins={[remarkGfm, remarkMath]}
+                                        rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeSemanticBlockquotes]}
+                                        components={{
+                                            a: (props) => <BlueLink {...props} />,
+                                        }}
+                                    >
+                                        {msg.text}
+                                    </Markdown>
+                                </div>
+                            )}
+
                             {/* Bewertung-Buttons nur bei Bot-Nachrichten und nur, wenn die Antwort abgeschlossen ist */}
                             {msg.user === "Bot" && !isBotResponding && msg.text.trim().length > 0 && (
                                 <div className="flex space-x-2 mt-1">
@@ -526,9 +538,9 @@ const ChatPage: React.FC = () => {
                         </div>
 
                     )
-//Lade animation
+    //Lade animation
 
-}
+    }
                     <div
                         className={`input-area flex flex-nowrap items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-3 w-full ${isBotResponding ? "opacity-50" : ""}`}>
                         <input
