@@ -438,7 +438,7 @@ const ChatPage: React.FC = () => {
                             }`}
                         >
                             {/* Bedingte Darstellung: Ladeanimation oder Nachrichtenblase */}
-                            {msg.user === "Bot" && msg.text === "" ? (
+                            {msg.user === "Bot" && msg.text.trim() === "" && isBotResponding ? (
                                 <div className="p-3 rounded-2xl text-sm shadow-sm transition-all transform dark:bg-gray-700 dark:text-white bg-gray-100 flex items-center">
                                     <svg className="animate-spin h-5 w-5 mr-3 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
