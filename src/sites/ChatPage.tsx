@@ -179,14 +179,15 @@ const ChatPage: React.FC = () => {
     }, [token, i18n.language]);
 
     useEffect(() => {
-        const savedTheme = localStorage.getItem("theme");
-        setIsDarkMode(savedTheme === "dark" || (savedTheme === null && window.matchMedia("(prefers-color-scheme: dark)").matches));
+        const query = window.matchMedia('(prefers-color-scheme: dark)');
+
+        setIsDarkMode(query.matches);
+
+        query.addEventListener('change', (event) => setIsDarkMode(event.matches));
+        document.documentElement.classList.toggle("dark", isDarkMode);
+
     }, []);
 
-    useEffect(() => {
-        localStorage.setItem("theme", isDarkMode ? "dark" : "light");
-        document.documentElement.classList.toggle("dark", isDarkMode);
-    }, [isDarkMode]);
 
     const shuffleAndSlice = (array: string[], count: number): string[] => {
         const shuffled = array.sort(() => 0.5 - Math.random());
