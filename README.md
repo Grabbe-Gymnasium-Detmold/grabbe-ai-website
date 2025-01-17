@@ -32,6 +32,7 @@ This repository contains the frontend code for the GrabbeAI project, a web-based
 - [Framer Motion](https://www.framer.com/motion/) - A library for creating animations in React.
 - [PostCSS](https://postcss.org/) - A tool for transforming CSS with plugins.
 - [Terser](https://terser.org/) - A JavaScript parser and mangler/compressor toolkit for ES6+.
+- [GrabbeAI Backend](https://github.com/Grabbe-Gymnasium-Detmold/grabbe-ai-backend/) - Our backend for the OpenAI API.
 ## Setup and Installation
 
 1. **Clone the Repository:**
