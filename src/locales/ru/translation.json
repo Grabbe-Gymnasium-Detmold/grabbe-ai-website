@@ -1,6 +1,14 @@
 {
   "title": "GrabbeAI",
   "subtitle": "Чем я могу вам помочь сегодня?",
+  "suggest_question_title": "Предложить вопрос",
+  "suggest_question_info": "GrabbeAI не знает ответа на ваш вопрос? GrabbeAI дал неверный ответ? Предложите вопрос, чтобы улучшить знания GrabbeAI.",
+  "new": "НОВОЕ",
+  "question_label": "Вопрос",
+  "question_placeholder": "Кто такая госпожа Даниэла Фауде?",
+  "answer_label": "Ответ (необязательно)",
+  "answer_placeholder": "Госпожа Даниэла Фауде была директором школы Grabbe-Gymnasium в Детмольде.",
+  "send_suggestion": "Отправить",
   "input_placeholder": "Напишите GrabbeAI...",
   "tos": "Условия использования",
   "privacy": "Политика конфиденциальности",
@@ -16,6 +24,6 @@
   "privacy_link": "Политика конфиденциальности",
   "dark_mode_toggle_label": "Переключить тёмный режим",
   "send_prompt_label": "Отправить запрос",
-  "language": "язык",
+  "language": "Язык",
   "disclaimer": "GrabbeAI может ошибаться. Просмотрите важную информацию. Используя GrabbeAI, вы соглашаетесь с нашими {tos} и {privacy}."
 }

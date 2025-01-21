@@ -1,6 +1,14 @@
 {
   "title": "GrabbeAI",
   "subtitle": "كيف يمكنني مساعدتك اليوم؟",
+  "suggest_question_title": "اقتراح سؤال",
+  "suggest_question_info": "هل لا يعرف GrabbeAI الإجابة على سؤالك؟ هل قدم GrabbeAI إجابة خاطئة؟ اقترح سؤالًا لتحسين معرفة GrabbeAI.",
+  "new": "جديد",
+  "question_label": "السؤال",
+  "question_placeholder": "من هي السيدة دانييلا فاوده؟",
+  "answer_label": "الإجابة (اختياري)",
+  "answer_placeholder": "كانت السيدة دانييلا فاوده مديرة مدرسة غابي-جيمناسيوم في دتمولد.",
+  "send_suggestion": "إرسال",
   "input_placeholder": "أرسل رسالة إلى GrabbeAI...",
   "tos": "شروط الاستخدام",
   "privacy": "سياسة الخصوصية",
@@ -17,5 +25,5 @@
   "dark_mode_toggle_label": "تبديل الوضع الداكن",
   "send_prompt_label": "إرسال الطلب",
   "language": "لغة",
-  "disclaimer": "GrabbeAI يمكن أن يرتكب الأخطاء. مراجعة المعلومات الهامة. باستخدام GrabbeAI فإنك توافق على {tos} و{privacy}."
+  "disclaimer": "يمكن لـ GrabbeAI ارتكاب الأخطاء. يُرجى مراجعة المعلومات الهامة. باستخدامك لـ GrabbeAI فإنك توافق على {tos} و{privacy}."
 }

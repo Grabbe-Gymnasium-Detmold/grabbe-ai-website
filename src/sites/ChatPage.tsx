@@ -409,7 +409,7 @@ const ChatPage: React.FC = () => {
       focus:outline-none
     "
                 >
-                    Frage vorschlagen<span
+                    {t('suggest_question_title')}<span
                     className="bg-blue-100 text-blue-800 text-xs font-medium me-1 px-1.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800 ms-1">NEU</span>
                 </button>
             </div>
@@ -491,11 +491,11 @@ const ChatPage: React.FC = () => {
                         </button>
 
                         <h2 className="text-xl font-semibold mb-4 text-center text-gray-900 dark:text-white">
-                            Frage vorschlagen<span
-                            className="bg-blue-100 text-blue-800 text-xl font-semibold me-2 px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800 ms-2">{t('new')}</span>
+                            {t('suggest_question_title')}<span
+                            className="bg-blue-100 text-blue-800 text-lg font-semibold me-2 px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800 ms-2">{t('new')}</span>
                         </h2>
                         <p className="text-center text-sm mb-6 text-gray-700 dark:text-gray-200">
-                            GrabbeAI wusste auf deine Frage keine Antwort? GrabbeAI hat auf deine Frage falsch oder nicht zufriedenstellend geantwortet? Dann schlage uns deine Frage hier vor und wir werden sie zu GrabbeAI hinzufügen!
+                            {t('suggest_question_subtitle')}
                         </p>
 
                         {/* FRAGE-Input */}
@@ -504,12 +504,12 @@ const ChatPage: React.FC = () => {
                                 htmlFor="question-input"
                                 className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                             >
-                                Frage
+                                {t('question_label')}
                             </label>
                             <input
                                 type="text"
                                 id="question-input"
-                                placeholder="Wo ist Frau Faude abgeblieben?"
+                                placeholder={t('question_placeholder')}
                                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-full focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                 value={suggestionQuestion}
                                 onChange={(e) => setSuggestionQuestion(e.target.value)}
@@ -522,12 +522,12 @@ const ChatPage: React.FC = () => {
                                 htmlFor="answer-input"
                                 className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                             >
-                                Antwort (optional)
+                                {t('answer_label')}
                             </label>
                             <input
                                 type="text"
                                 id="answer-input"
-                                placeholder="Frau Faude ging im Herbst 2024 in den Ruhestand."
+                                placeholder={t('answer_placeholder')}
                                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-full focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                 value={suggestionAnswer}
                                 onChange={(e) => setSuggestionAnswer(e.target.value)}
@@ -549,7 +549,7 @@ const ChatPage: React.FC = () => {
             focus:outline-none
           "
                             >
-                                Senden
+                                {t('send_suggestion')}
                             </button>
                         </div>
                     </div>
