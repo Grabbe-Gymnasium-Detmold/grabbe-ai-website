@@ -407,14 +407,15 @@ const ChatPage: React.FC = () => {
       focus:outline-none
     "
                 >
-                    Frage vorschlagen
+                    Frage vorschlagen<span
+                    className="bg-blue-100 text-blue-800 text-2xl font-semibold me-2 px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800 ms-2">NEU</span>
                 </button>
             </div>
 
 
             {/* Language Dropdown */}
             <div className="absolute top-4 right-4 z-50" ref={dropdownRef}>
-                <div className="relative">
+            <div className="relative">
                     <button
                         className="bg-white text-gray-500 dark:bg-gray-700 dark:text-white rounded-xl shadow-lg py-2 pr-3 pl-5 focus:outline-none flex items-center"
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
