@@ -471,33 +471,71 @@ const ChatPage: React.FC = () => {
                         <h2 className="text-xl font-semibold mb-4 text-center dark:text-white">
                             Frage vorschlagen
                         </h2>
-                        <p className="text-center text-sm mb-6 dark:text-gray-200">
+                        <p className="text-center text-sm mb-6 text-gray-700 dark:text-gray-200">
                             Du möchtest eine Frage vorschlagen, auf die GrabbeAI bisher keine Antwort weiß?
                         </p>
 
                         {/* Eingabefelder */}
-                        <label className="block mb-2 text-sm font-medium dark:text-gray-200">
+                        <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">
                             Frage
                         </label>
-                        <input
-                            type="text"
-                            className="w-full mb-4 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        <textarea
+                            placeholder="Wo ist Frau Faude abgeblieben?"
+                            className="
+          w-full
+          resize-none
+          overflow-y-auto
+          rounded-lg
+          px-3 py-2
+          text-sm
+          outline-none
+          focus:ring-2
+          border
+          focus:ring-blue-400
+          border-token-border-medium
+          h-9
+          bg-token-main-surface-primary
+          dark:bg-gray-700
+          dark:border-gray-600
+          dark:text-white
+          text-gray-800
+          mb-4
+        "
                             value={suggestionQuestion}
                             onChange={(e) => setSuggestionQuestion(e.target.value)}
                         />
 
-                        <label className="block mb-2 text-sm font-medium dark:text-gray-200">
+                        <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">
                             Antwort (optional)
                         </label>
-                        <input
-                            type="text"
-                            className="w-full mb-4 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        <textarea
+                            placeholder="Frau Faude wurde im Herbst 2024 in den Ruhestand entlassen."
+                            className="
+          w-full
+          resize-none
+          overflow-y-auto
+          rounded-lg
+          px-3 py-2
+          text-sm
+          outline-none
+          focus:ring-2
+          border
+          focus:ring-blue-400
+          border-token-border-medium
+          h-9
+          bg-token-main-surface-primary
+          dark:bg-gray-700
+          dark:border-gray-600
+          dark:text-white
+          text-gray-800
+          mb-4
+        "
                             value={suggestionAnswer}
                             onChange={(e) => setSuggestionAnswer(e.target.value)}
                         />
 
                         {/* Senden-Button */}
-                        <div className="flex justify-start">
+                        <div className="flex justify-end">
                             <button
                                 onClick={handleSuggestionSubmit}
                                 className="bg-green-500 text-white px-4 py-2 rounded-full hover:bg-green-600 transition-colors"
@@ -508,6 +546,7 @@ const ChatPage: React.FC = () => {
                     </div>
                 </div>
             )}
+
 
             <div className="bg-white text-gray-800 dark:bg-gray-800 dark:text-white w-full max-w-xl p-10 flex flex-col items-center">
                 <div className="p-4 dark:bg-gray-800 dark:text-white bg-white text-black w-full">
