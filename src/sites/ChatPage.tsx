@@ -495,7 +495,7 @@ const ChatPage: React.FC = () => {
                             className="bg-blue-100 text-blue-800 text-lg font-semibold me-2 px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800 ms-2">{t('new')}</span>
                         </h2>
                         <p className="text-center text-sm mb-6 text-gray-700 dark:text-gray-200">
-                            {t('suggest_question_subtitle')}
+                            {t('suggest_question_info')}
                         </p>
 
                         {/* FRAGE-Input */}
