@@ -494,7 +494,7 @@ const ChatPage: React.FC = () => {
                             Frage vorschlagen
                         </h2>
                         <p className="text-center text-sm mb-6 text-gray-700 dark:text-gray-200">
-                            Du möchtest eine Frage vorschlagen, auf die GrabbeAI bisher keine Antwort weiß?
+                            GrabbeAI wusste auf deine Frage keine Antwort? GrabbeAI hat auf deine Frage falsch oder nicht zufriedenstellend geantwortet? Dann schlage uns deine Frage hier vor und wir werden sie zu GrabbeAI hinzufügen!
                         </p>
 
                         {/* FRAGE-Input */}
@@ -756,6 +756,12 @@ const ChatPage: React.FC = () => {
                 <div className="mt-2 text-center text-gray-600 dark:text-gray-600 text-xs">
                     <span dangerouslySetInnerHTML={{__html: disclaimer}}/>
                 </div>
+
+                <div className="mt-6 text-center text-gray-600 dark:text-gray-600 text-xs">
+                    &copy; 2025 Finn Busse & Maximilian von Beck. Alle Rechte vorbehalten.
+                </div>
+
+
             </div>
         </div>
     );
