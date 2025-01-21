@@ -379,7 +379,7 @@ const ChatPage: React.FC = () => {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || "Fehler beim Senden der Frage.");
+                throw new Error( errorData.error || "Fehler beim Senden der Frage.");
             }
 
             addToast("Vielen Dank für deinen Vorschlag!", "success", 5);
@@ -388,9 +388,11 @@ const ChatPage: React.FC = () => {
             // Felder zurücksetzen
             setSuggestionQuestion("");
             setSuggestionAnswer("");
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(error);
-            addToast(`Fehler beim Senden deines Vorschlags: ${error.message}`, "error", 5);
+            if(error instanceof Error) {
+                addToast(`Fehler beim Senden deines Vorschlags: ${error.message}`, "error", 5);
+            }
         }
     };
 
@@ -507,7 +509,7 @@ const ChatPage: React.FC = () => {
                                 type="text"
                                 id="question-input"
                                 placeholder="Wo ist Frau Faude abgeblieben?"
-                                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-full focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                 value={suggestionQuestion}
                                 onChange={(e) => setSuggestionQuestion(e.target.value)}
                             />
@@ -525,7 +527,7 @@ const ChatPage: React.FC = () => {
                                 type="text"
                                 id="answer-input"
                                 placeholder="Frau Faude ging im Herbst 2024 in den Ruhestand."
-                                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-full focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                 value={suggestionAnswer}
                                 onChange={(e) => setSuggestionAnswer(e.target.value)}
                             />
