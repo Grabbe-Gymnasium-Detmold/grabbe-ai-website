@@ -468,7 +468,7 @@ const ChatPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Modal für Vorschlags-Formular */}
+            {/* Modul für Vorschlags-Formular */}
             {showSuggestionModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
                     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl max-w-md w-full relative mx-2">
@@ -491,7 +491,8 @@ const ChatPage: React.FC = () => {
                         </button>
 
                         <h2 className="text-xl font-semibold mb-4 text-center text-gray-900 dark:text-white">
-                            Frage vorschlagen
+                            Frage vorschlagen<span
+                            className="bg-blue-100 text-blue-800 text-xl font-semibold me-2 px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800 ms-2">{t('new')}</span>
                         </h2>
                         <p className="text-center text-sm mb-6 text-gray-700 dark:text-gray-200">
                             GrabbeAI wusste auf deine Frage keine Antwort? GrabbeAI hat auf deine Frage falsch oder nicht zufriedenstellend geantwortet? Dann schlage uns deine Frage hier vor und wir werden sie zu GrabbeAI hinzufügen!
