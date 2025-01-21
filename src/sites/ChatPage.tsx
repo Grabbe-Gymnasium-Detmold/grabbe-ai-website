@@ -85,10 +85,10 @@ const ChatPage: React.FC = () => {
 
     const authenticate = useCallback(async () => {
         try {
-            const authResponse = await fetch(AUTH_URL, { method: "GET", headers: { "Content-Type": "application/json" }});
+            const authResponse = await fetch(AUTH_URL, {method: "GET", headers: {"Content-Type": "application/json"}});
             if (!authResponse.ok) throw new Error("Authentication failed.");
 
-            const { token: authToken } = await authResponse.json();
+            const {token: authToken} = await authResponse.json();
             localStorage.setItem("session_token", authToken);
             setToken(authToken);
         } catch (error) {
@@ -166,7 +166,7 @@ const ChatPage: React.FC = () => {
 
                     if (!qResponse.ok) throw new Error("Fetching example questions failed.");
 
-                    const { questions } = await qResponse.json();
+                    const {questions} = await qResponse.json();
                     localStorage.setItem(cacheKey, JSON.stringify(questions));
                     setExampleQuestions(shuffleAndSlice(questions[currentLanguage], 4));
                 }
@@ -200,7 +200,7 @@ const ChatPage: React.FC = () => {
 
         setIsBotResponding(true);
         setShowExampleCards(false);
-        const userMessage = { id: Date.now(), text: inputText.trim(), user: "You" as const, evaluation: "null" };
+        const userMessage = {id: Date.now(), text: inputText.trim(), user: "You" as const, evaluation: "null"};
         setMessages(prev => [...prev, userMessage]);
         setInputText("");
 
@@ -221,7 +221,7 @@ const ChatPage: React.FC = () => {
         }
 
         const botMessageId = Date.now() + 1;
-        setMessages(prev => [...prev, { id: botMessageId, text: "", user: "Bot" as const, evaluation: "null" }]);
+        setMessages(prev => [...prev, {id: botMessageId, text: "", user: "Bot" as const, evaluation: "null"}]);
 
         try {
             const response = await fetch(API_URL, {
@@ -231,7 +231,7 @@ const ChatPage: React.FC = () => {
                     Accept: "text/event-stream",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ question: userMessage.text, threadId: currentThreadId }),
+                body: JSON.stringify({question: userMessage.text, threadId: currentThreadId}),
             });
             if (!response.ok) throw new Error("Failed to fetch bot response.");
 
@@ -243,17 +243,20 @@ const ChatPage: React.FC = () => {
             let botMessageText = "";
 
             while (!done) {
-                const { value, done: readerDone } = await reader.read();
+                const {value, done: readerDone} = await reader.read();
                 done = readerDone;
-                const chunk = decoder.decode(value, { stream: true });
+                const chunk = decoder.decode(value, {stream: true});
 
                 if (chunk.startsWith('{"done":true,')) {
                     // Falls das Backend dir das finale JSON schickt: {"done":true, "messageId": ...}
-                    const { messageId } = JSON.parse(chunk);
-                    setMessages(prev => prev.map(msg => msg.id === botMessageId ? { ...msg, id: messageId } : msg));
+                    const {messageId} = JSON.parse(chunk);
+                    setMessages(prev => prev.map(msg => msg.id === botMessageId ? {...msg, id: messageId} : msg));
                 } else {
                     botMessageText += chunk;
-                    setMessages(prev => prev.map(msg => msg.id === botMessageId ? { ...msg, text: botMessageText } : msg));
+                    setMessages(prev => prev.map(msg => msg.id === botMessageId ? {
+                        ...msg,
+                        text: botMessageText
+                    } : msg));
                 }
             }
         } catch (error: unknown) {
@@ -304,7 +307,7 @@ const ChatPage: React.FC = () => {
 
     const handleEvaluation = async (messageId: number, evaluation: "positive" | "negative") => {
         if (!threadId || !token) return;
-        setMessages(prev => prev.map(msg => msg.id === messageId ? { ...msg, evaluation } : msg));
+        setMessages(prev => prev.map(msg => msg.id === messageId ? {...msg, evaluation} : msg));
 
         try {
             const response = await fetch(EVALUATION_URL, {
@@ -313,7 +316,7 @@ const ChatPage: React.FC = () => {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ threadId, messageId, evaluation }),
+                body: JSON.stringify({threadId, messageId, evaluation}),
             });
 
             if (!response.ok) {
@@ -397,11 +400,17 @@ const ChatPage: React.FC = () => {
             <div className="absolute top-4 left-4 z-50">
                 <button
                     onClick={() => setShowSuggestionModal(true)}
-                    className="bg-white text-gray-500 dark:bg-gray-700 dark:text-white rounded-xl shadow-lg py-2 px-4 focus:outline-none hover:opacity-90 transition-colors"
+                    className="border border-gray-300 dark:border-gray-600 rounded-full py-2 px-4 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-100
+      dark:hover:bg-gray-700
+      transition-colors
+      text-sm
+      focus:outline-none
+    "
                 >
                     Frage vorschlagen
                 </button>
             </div>
+
 
             {/* Language Dropdown */}
             <div className="absolute top-4 right-4 z-50" ref={dropdownRef}>
@@ -459,18 +468,29 @@ const ChatPage: React.FC = () => {
             {/* Modal für Vorschlags-Formular */}
             {showSuggestionModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl max-w-md w-full relative">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl max-w-md w-full relative mx-2">
                         {/* Close-Button */}
                         <button
-                            className="absolute top-2 right-2 text-gray-600 dark:text-gray-300 hover:opacity-80"
+                            className="
+          absolute
+          top-2
+          right-2
+          text-gray-600
+          dark:text-gray-300
+          hover:opacity-80
+          text-2xl
+          focus:outline-none
+        "
                             onClick={() => setShowSuggestionModal(false)}
                             aria-label="Close"
                         >
                             ×
                         </button>
-                        <h2 className="text-xl font-semibold mb-4 text-center dark:text-white">
+
+                        <h2 className="text-xl font-semibold mb-4 text-center dark:text-white text-gray-900">
                             Frage vorschlagen
                         </h2>
+
                         <p className="text-center text-sm mb-6 text-gray-700 dark:text-gray-200">
                             Du möchtest eine Frage vorschlagen, auf die GrabbeAI bisher keine Antwort weiß?
                         </p>
@@ -485,22 +505,24 @@ const ChatPage: React.FC = () => {
           w-full
           resize-none
           overflow-y-auto
-          rounded-lg
-          px-3 py-2
+          rounded-md
+          px-3
+          py-2
           text-sm
           outline-none
-          focus:ring-2
           border
-          focus:ring-blue-400
-          border-token-border-medium
-          h-9
-          bg-token-main-surface-primary
-          dark:bg-gray-700
+          border-gray-300
           dark:border-gray-600
+          bg-white
+          dark:bg-gray-700
           dark:text-white
           text-gray-800
+          focus:ring-1
+          focus:ring-gray-400
+          focus:border-gray-400
           mb-4
         "
+                            style={{ minHeight: "3rem" }}
                             value={suggestionQuestion}
                             onChange={(e) => setSuggestionQuestion(e.target.value)}
                         />
@@ -509,27 +531,29 @@ const ChatPage: React.FC = () => {
                             Antwort (optional)
                         </label>
                         <textarea
-                            placeholder="Frau Faude wurde im Herbst 2024 in den Ruhestand entlassen."
+                            placeholder="Frau Faude ging im Herbst 2024 in den Ruhestand."
                             className="
           w-full
           resize-none
           overflow-y-auto
-          rounded-lg
-          px-3 py-2
+          rounded-md
+          px-3
+          py-2
           text-sm
           outline-none
-          focus:ring-2
           border
-          focus:ring-blue-400
-          border-token-border-medium
-          h-9
-          bg-token-main-surface-primary
-          dark:bg-gray-700
+          border-gray-300
           dark:border-gray-600
+          bg-white
+          dark:bg-gray-700
           dark:text-white
           text-gray-800
+          focus:ring-1
+          focus:ring-gray-400
+          focus:border-gray-400
           mb-4
         "
+                            style={{ minHeight: "3rem" }}
                             value={suggestionAnswer}
                             onChange={(e) => setSuggestionAnswer(e.target.value)}
                         />
@@ -538,7 +562,16 @@ const ChatPage: React.FC = () => {
                         <div className="flex justify-end">
                             <button
                                 onClick={handleSuggestionSubmit}
-                                className="bg-green-500 text-white px-4 py-2 rounded-full hover:bg-green-600 transition-colors"
+                                className="
+            bg-gray-500
+            hover:bg-gray-600
+            text-white
+            px-4
+            py-2
+            rounded-full
+            transition-colors
+            focus:outline-none
+          "
                             >
                                 Senden
                             </button>
@@ -548,7 +581,9 @@ const ChatPage: React.FC = () => {
             )}
 
 
-            <div className="bg-white text-gray-800 dark:bg-gray-800 dark:text-white w-full max-w-xl p-10 flex flex-col items-center">
+
+            <div
+                className="bg-white text-gray-800 dark:bg-gray-800 dark:text-white w-full max-w-xl p-10 flex flex-col items-center">
                 <div className="p-4 dark:bg-gray-800 dark:text-white bg-white text-black w-full">
                     {errorMessage && (
                         <div
@@ -702,8 +737,10 @@ const ChatPage: React.FC = () => {
                         <div className="absolute top-0 left-0 w-full h-full flex justify-center items-center">
                             <div className="flex space-x-2">
                                 <div className="h-2 w-2 rounded-full animate-bounce bg-gray-800 dark:bg-gray-300"></div>
-                                <div className="h-2 w-2 rounded-full animate-bounce bg-gray-800 dark:bg-gray-300 delay-200"></div>
-                                <div className="h-2 w-2 rounded-full animate-bounce bg-gray-800 dark:bg-gray-300 delay-400"></div>
+                                <div
+                                    className="h-2 w-2 rounded-full animate-bounce bg-gray-800 dark:bg-gray-300 delay-200"></div>
+                                <div
+                                    className="h-2 w-2 rounded-full animate-bounce bg-gray-800 dark:bg-gray-300 delay-400"></div>
                             </div>
                         </div>
                     )}
@@ -741,7 +778,7 @@ const ChatPage: React.FC = () => {
                 </div>
 
                 <div className="mt-2 text-center text-gray-600 dark:text-gray-600 text-xs">
-                    <span dangerouslySetInnerHTML={{ __html: disclaimer }}/>
+                    <span dangerouslySetInnerHTML={{__html: disclaimer}}/>
                 </div>
             </div>
         </div>
