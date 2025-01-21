@@ -19,8 +19,9 @@ const THREAD_URL = "https://api.grabbe.site/thread/create";
 const EXAMPLE_QUESTION_URL = "https://api.grabbe.site/examples";
 const CHECK_TOKEN_URL = "https://api.grabbe.site/auth/check";
 const EVALUATION_URL = "https://api.grabbe.site/evaluation";
-// Hier könntest du z.B. einen SUGGESTION_URL definieren, falls du es an dein Backend senden willst
-// const SUGGESTION_URL = "https://api.grabbe.site/suggestion"; // Beispiel-Endpoint
+
+// Neu: Dein Vorschlags-Endpoint
+const SUGGESTION_URL = "https://api.grabbe.site/suggestions";
 
 const ChatPage: React.FC = () => {
     const [messages, setMessages] = useState<{
@@ -71,7 +72,7 @@ const ChatPage: React.FC = () => {
 
     useEffect(() => {
         updateDisclaimer();
-    }, [i18n.language]); // i18n.language ändert sich bei Sprachwechsel
+    }, [i18n.language]);
 
     const languages = [
         {code: "ar", name: "Arabic", flag: "🇸🇦"},
@@ -84,10 +85,10 @@ const ChatPage: React.FC = () => {
 
     const authenticate = useCallback(async () => {
         try {
-            const authResponse = await fetch(AUTH_URL, {method: "GET", headers: {"Content-Type": "application/json"}});
+            const authResponse = await fetch(AUTH_URL, { method: "GET", headers: { "Content-Type": "application/json" }});
             if (!authResponse.ok) throw new Error("Authentication failed.");
 
-            const {token: authToken} = await authResponse.json();
+            const { token: authToken } = await authResponse.json();
             localStorage.setItem("session_token", authToken);
             setToken(authToken);
         } catch (error) {
@@ -145,8 +146,8 @@ const ChatPage: React.FC = () => {
 
                 // Überprüfen, ob der Cache invalidiert werden soll
                 if (reloadCounter >= 4) {
-                    localStorage.removeItem(cacheKey); // Cache invalidieren
-                    localStorage.setItem(reloadCounterKey, "1"); // Zählerstand zurücksetzen
+                    localStorage.removeItem(cacheKey);
+                    localStorage.setItem(reloadCounterKey, "1");
                 }
 
                 const cachedQuestions = localStorage.getItem(cacheKey);
@@ -165,12 +166,11 @@ const ChatPage: React.FC = () => {
 
                     if (!qResponse.ok) throw new Error("Fetching example questions failed.");
 
-                    const {questions} = await qResponse.json();
+                    const { questions } = await qResponse.json();
                     localStorage.setItem(cacheKey, JSON.stringify(questions));
                     setExampleQuestions(shuffleAndSlice(questions[currentLanguage], 4));
                 }
 
-                // Zählerstand erhöhen und speichern
                 localStorage.setItem(reloadCounterKey, (reloadCounter + 1).toString());
             } catch (error) {
                 console.error(error);
@@ -185,14 +185,10 @@ const ChatPage: React.FC = () => {
 
     useEffect(() => {
         const query = window.matchMedia('(prefers-color-scheme: dark)');
-
         setIsDarkMode(query.matches);
-
         query.addEventListener('change', (event) => setIsDarkMode(event.matches));
         document.documentElement.classList.toggle("dark", isDarkMode);
-
     }, []);
-
 
     const shuffleAndSlice = (array: string[], count: number): string[] => {
         const shuffled = array.sort(() => 0.5 - Math.random());
@@ -204,7 +200,7 @@ const ChatPage: React.FC = () => {
 
         setIsBotResponding(true);
         setShowExampleCards(false);
-        const userMessage = {id: Date.now(), text: inputText.trim(), user: "You" as const, evaluation: "null"};
+        const userMessage = { id: Date.now(), text: inputText.trim(), user: "You" as const, evaluation: "null" };
         setMessages(prev => [...prev, userMessage]);
         setInputText("");
 
@@ -225,7 +221,7 @@ const ChatPage: React.FC = () => {
         }
 
         const botMessageId = Date.now() + 1;
-        setMessages(prev => [...prev, {id: botMessageId, text: "", user: "Bot" as const, evaluation: "null"}]);
+        setMessages(prev => [...prev, { id: botMessageId, text: "", user: "Bot" as const, evaluation: "null" }]);
 
         try {
             const response = await fetch(API_URL, {
@@ -235,7 +231,7 @@ const ChatPage: React.FC = () => {
                     Accept: "text/event-stream",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({question: userMessage.text, threadId: currentThreadId}),
+                body: JSON.stringify({ question: userMessage.text, threadId: currentThreadId }),
             });
             if (!response.ok) throw new Error("Failed to fetch bot response.");
 
@@ -247,29 +243,29 @@ const ChatPage: React.FC = () => {
             let botMessageText = "";
 
             while (!done) {
-                const {value, done: readerDone} = await reader.read();
+                const { value, done: readerDone } = await reader.read();
                 done = readerDone;
-                const chunk = decoder.decode(value, {stream: true});
+                const chunk = decoder.decode(value, { stream: true });
+
                 if (chunk.startsWith('{"done":true,')) {
-                    const {messageId} = JSON.parse(chunk);
-                    setMessages(prev => prev.map(msg => msg.id === botMessageId ? {...msg, id: messageId} : msg));
+                    // Falls das Backend dir das finale JSON schickt: {"done":true, "messageId": ...}
+                    const { messageId } = JSON.parse(chunk);
+                    setMessages(prev => prev.map(msg => msg.id === botMessageId ? { ...msg, id: messageId } : msg));
                 } else {
                     botMessageText += chunk;
-                    setMessages(prev => prev.map(msg => msg.id === botMessageId ? {
-                        ...msg,
-                        text: botMessageText
-                    } : msg));
+                    setMessages(prev => prev.map(msg => msg.id === botMessageId ? { ...msg, text: botMessageText } : msg));
                 }
-
             }
-
         } catch (error: unknown) {
-            setMessages(prev => [...prev, {
-                id: Date.now(),
-                text: error instanceof Error ? `Error: ${error.message}` : "Unknown error occurred.",
-                user: "Bot" as const,
-                evaluation: "null"
-            }]);
+            setMessages(prev => [
+                ...prev,
+                {
+                    id: Date.now(),
+                    text: error instanceof Error ? `Error: ${error.message}` : "Unknown error occurred.",
+                    user: "Bot" as const,
+                    evaluation: "null",
+                },
+            ]);
         } finally {
             setIsBotResponding(false);
         }
@@ -298,7 +294,6 @@ const ChatPage: React.FC = () => {
                 setErrorMessage("Die Erstellung eines neuen Chats ist fehlgeschlagen. Bitte versuche es später erneut.");
                 return null;
             }
-
             const threadData = await threadResponse.json();
             return threadData.threadId;
         } catch (error) {
@@ -309,7 +304,8 @@ const ChatPage: React.FC = () => {
 
     const handleEvaluation = async (messageId: number, evaluation: "positive" | "negative") => {
         if (!threadId || !token) return;
-        setMessages(prev => prev.map(msg => msg.id === messageId ? {...msg, evaluation} : msg));
+        setMessages(prev => prev.map(msg => msg.id === messageId ? { ...msg, evaluation } : msg));
+
         try {
             const response = await fetch(EVALUATION_URL, {
                 method: "POST",
@@ -317,7 +313,7 @@ const ChatPage: React.FC = () => {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({threadId, messageId, evaluation}),
+                body: JSON.stringify({ threadId, messageId, evaluation }),
             });
 
             if (!response.ok) {
@@ -346,45 +342,52 @@ const ChatPage: React.FC = () => {
                 setIsDropdownOpen(false);
             }
         };
-
         document.addEventListener("mousedown", handleClickOutside);
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [dropdownRef]);
 
-    // NEU: Funktion, um den Vorschlag abzuschicken (Backend-Logik anpassen)
+    // NEU: Funktion, um den Vorschlag tatsächlich an dein Backend zu senden
     const handleSuggestionSubmit = async () => {
+        // Kurze Prüfung, ob ggf. question ausgefüllt ist
+        if (!suggestionQuestion.trim()) {
+            addToast("Bitte eine Frage eingeben!", "error", 3);
+            return;
+        }
+
         try {
-            // Hier würdest du deinen Request an dein Backend senden.
-            // z.B.:
-            /*
+            // Auth-Token vorhanden?
+            if (!token) {
+                throw new Error("Keine gültige Session. Bitte neu laden.");
+            }
+
             const response = await fetch(SUGGESTION_URL, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                question: suggestionQuestion,
-                answer: suggestionAnswer, // optional
-              }),
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`, // falls dein Backend es verlangt
+                },
+                body: JSON.stringify({
+                    question: suggestionQuestion,
+                    answer: suggestionAnswer || "",
+                }),
             });
 
             if (!response.ok) {
-              throw new Error("Fehler beim Senden der Frage.");
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || "Fehler beim Senden der Frage.");
             }
-            */
-            // Für die Demo einfach nur Toast & schließen:
+
             addToast("Vielen Dank für deinen Vorschlag!", "success", 5);
             setShowSuggestionModal(false);
 
             // Felder zurücksetzen
             setSuggestionQuestion("");
             setSuggestionAnswer("");
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            addToast("Fehler beim Senden deines Vorschlags.", "error", 5);
+            addToast(`Fehler beim Senden deines Vorschlags: ${error.message}`, "error", 5);
         }
     };
 
@@ -400,7 +403,7 @@ const ChatPage: React.FC = () => {
                 </button>
             </div>
 
-            {/* Beginn des neuen Language Dropdowns */}
+            {/* Language Dropdown */}
             <div className="absolute top-4 right-4 z-50" ref={dropdownRef}>
                 <div className="relative">
                     <button
@@ -452,7 +455,6 @@ const ChatPage: React.FC = () => {
                     )}
                 </div>
             </div>
-            {/* Ende des neuen Language Dropdowns */}
 
             {/* Modal für Vorschlags-Formular */}
             {showSuggestionModal && (
@@ -507,8 +509,7 @@ const ChatPage: React.FC = () => {
                 </div>
             )}
 
-            <div
-                className="bg-white text-gray-800 dark:bg-gray-800 dark:text-white w-full max-w-xl p-10 flex flex-col items-center">
+            <div className="bg-white text-gray-800 dark:bg-gray-800 dark:text-white w-full max-w-xl p-10 flex flex-col items-center">
                 <div className="p-4 dark:bg-gray-800 dark:text-white bg-white text-black w-full">
                     {errorMessage && (
                         <div
@@ -579,11 +580,15 @@ const ChatPage: React.FC = () => {
                                                 data-testid="good-response-turn-action-button"
                                                 onClick={() => handleEvaluation(msg.id, "positive")}
                                             >
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                                     xmlns="http://www.w3.org/2000/svg" className="icon-sm-heavy">
-                                                    <path fillRule="evenodd" clipRule="evenodd"
-                                                          d="M12.1318 2.50389C12.3321 2.15338 12.7235 1.95768 13.124 2.00775L13.5778 2.06447C16.0449 2.37286 17.636 4.83353 16.9048 7.20993L16.354 8.99999H17.0722C19.7097 8.99999 21.6253 11.5079 20.9313 14.0525L19.5677 19.0525C19.0931 20.7927 17.5124 22 15.7086 22H6C4.34315 22 3 20.6568 3 19V12C3 10.3431 4.34315 8.99999 6 8.99999H8C8.25952 8.99999 8.49914 8.86094 8.6279 8.63561L12.1318 2.50389ZM10 20H15.7086C16.6105 20 17.4008 19.3964 17.6381 18.5262L19.0018 13.5262C19.3488 12.2539 18.391 11 17.0722 11H15C14.6827 11 14.3841 10.8494 14.1956 10.5941C14.0071 10.3388 13.9509 10.0092 14.0442 9.70591L14.9932 6.62175C15.3384 5.49984 14.6484 4.34036 13.5319 4.08468L10.3644 9.62789C10.0522 10.1742 9.56691 10.5859 9 10.8098V19C9 19.5523 9.44772 20 10 20ZM7 11V19C7 19.3506 7.06015 19.6872 7.17071 20H6C5.44772 20 5 19.5523 5 19V12C5 11.4477 5.44772 11 6 11H7Z"
-                                                          fill="currentColor"></path>
+                                                <svg
+                                                    width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                    xmlns="http://www.w3.org/2000/svg" className="icon-sm-heavy"
+                                                >
+                                                    <path
+                                                        fillRule="evenodd" clipRule="evenodd"
+                                                        d="M12.1318 2.50389C12.3321 2.15338 12.7235 1.95768 13.124 2.00775L13.5778 2.06447C16.0449 2.37286 17.636 4.83353 16.9048 7.20993L16.354 8.99999H17.0722C19.7097 8.99999 21.6253 11.5079 20.9313 14.0525L19.5677 19.0525C19.0931 20.7927 17.5124 22 15.7086 22H6C4.34315 22 3 20.6568 3 19V12C3 10.3431 4.34315 8.99999 6 8.99999H8C8.25952 8.99999 8.49914 8.86094 8.6279 8.63561L12.1318 2.50389ZM10 20H15.7086C16.6105 20 17.4008 19.3964 17.6381 18.5262L19.0018 13.5262C19.3488 12.2539 18.391 11 17.0722 11H15C14.6827 11 14.3841 10.8494 14.1956 10.5941C14.0071 10.3388 13.9509 10.0092 14.0442 9.70591L14.9932 6.62175C15.3384 5.49984 14.6484 4.34036 13.5319 4.08468L10.3644 9.62789C10.0522 10.1742 9.56691 10.5859 9 10.8098V19C9 19.5523 9.44772 20 10 20ZM7 11V19C7 19.3506 7.06015 19.6872 7.17071 20H6C5.44772 20 5 19.5523 5 19V12C5 11.4477 5.44772 11 6 11H7Z"
+                                                        fill="currentColor"
+                                                    />
                                                 </svg>
                                             </button>
                                             {/* Daumen Runter Button */}
@@ -593,11 +598,15 @@ const ChatPage: React.FC = () => {
                                                 data-testid="bad-response-turn-action-button"
                                                 onClick={() => handleEvaluation(msg.id, "negative")}
                                             >
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                                     xmlns="http://www.w3.org/2000/svg" className="icon-sm-heavy">
-                                                    <path fillRule="evenodd" clipRule="evenodd"
-                                                          d="M11.8727 21.4961C11.6725 21.8466 11.2811 22.0423 10.8805 21.9922L10.4267 21.9355C7.95958 21.6271 6.36855 19.1665 7.09975 16.7901L7.65054 15H6.93226C4.29476 15 2.37923 12.4921 3.0732 9.94753L4.43684 4.94753C4.91145 3.20728 6.49209 2 8.29589 2H18.0045C19.6614 2 21.0045 3.34315 21.0045 5V12C21.0045 13.6569 19.6614 15 18.0045 15H16.0045C15.745 15 15.5054 15.1391 15.3766 15.3644L11.8727 21.4961ZM14.0045 4H8.29589C7.39399 4 6.60367 4.60364 6.36637 5.47376L5.00273 10.4738C4.65574 11.746 5.61351 13 6.93226 13H9.00451C9.32185 13 9.62036 13.1506 9.8089 13.4059C9.99743 13.6612 10.0536 13.9908 9.96028 14.2941L9.01131 17.3782C8.6661 18.5002 9.35608 19.6596 10.4726 19.9153L13.6401 14.3721C13.9523 13.8258 14.4376 13.4141 15.0045 13.1902V5C15.0045 4.44772 14.5568 4 14.0045 4ZM17.0045 13V5C17.0045 4.64937 16.9444 4.31278 16.8338 4H18.0045C18.5568 4 19.0045 4.44772 19.0045 5V12C19.0045 12.5523 18.5568 13 18.0045 13H17.0045Z"
-                                                          fill="currentColor"></path>
+                                                <svg
+                                                    width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                    xmlns="http://www.w3.org/2000/svg" className="icon-sm-heavy"
+                                                >
+                                                    <path
+                                                        fillRule="evenodd" clipRule="evenodd"
+                                                        d="M11.8727 21.4961C11.6725 21.8466 11.2811 22.0423 10.8805 21.9922L10.4267 21.9355C7.95958 21.6271 6.36855 19.1665 7.09975 16.7901L7.65054 15H6.93226C4.29476 15 2.37923 12.4921 3.0732 9.94753L4.43684 4.94753C4.91145 3.20728 6.49209 2 8.29589 2H18.0045C19.6614 2 21.0045 3.34315 21.0045 5V12C21.0045 13.6569 19.6614 15 18.0045 15H16.0045C15.745 15 15.5054 15.1391 15.3766 15.3644L11.8727 21.4961ZM14.0045 4H8.29589C7.39399 4 6.60367 4.60364 6.36637 5.47376L5.00273 10.4738C4.65574 11.746 5.61351 13 6.93226 13H9.00451C9.32185 13 9.62036 13.1506 9.8089 13.4059C9.99743 13.6612 10.0536 13.9908 9.96028 14.2941L9.01131 17.3782C8.6661 18.5002 9.35608 19.6596 10.4726 19.9153L13.6401 14.3721C13.9523 13.8258 14.4376 13.4141 15.0045 13.1902V5C15.0045 4.44772 14.5568 4 14.0045 4ZM17.0045 13V5C17.0045 4.64937 16.9444 4.31278 16.8338 4H18.0045C18.5568 4 19.0045 4.44772 19.0045 5V12C19.0045 12.5523 18.5568 13 18.0045 13H17.0045Z"
+                                                        fill="currentColor"
+                                                    />
                                                 </svg>
                                             </button>
                                         </>
@@ -611,9 +620,10 @@ const ChatPage: React.FC = () => {
                                         >
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                                                  xmlns="http://www.w3.org/2000/svg" className="icon-sm-heavy">
-                                                <path fillRule="evenodd" clipRule="evenodd"
-                                                      d="M12.1318 2.50389C12.3321 2.15338 12.7235 1.95768 13.124 2.00775L13.5778 2.06447C16.0449 2.37286 17.636 4.83353 16.9048 7.20993L16.354 8.99999H17.0722C19.7097 8.99999 21.6253 11.5079 20.9313 14.0525L19.5677 19.0525C19.0931 20.7927 17.5124 22 15.7086 22H6C4.34315 22 3 20.6568 3 19V12C3 10.3431 4.34315 8.99999 6 8.99999H8C8.25952 8.99999 8.49914 8.86094 8.6279 8.63561L12.1318 2.50389ZM10 20H15.7086C16.6105 20 17.4008 19.3964 17.6381 18.5262L19.0018 13.5262C19.3488 12.2539 18.391 11 17.0722 11H15C14.6827 11 14.3841 10.8494 14.1956 10.5941C14.0071 10.3388 13.9509 10.0092 14.0442 9.70591L14.9932 6.62175C15.3384 5.49984 14.6484 4.34036 13.5319 4.08468L10.3644 9.62789C10.0522 10.1742 9.56691 10.5859 9 10.8098V19C9 19.5523 9.44772 20 10 20ZM7 11V19C7 19.3506 7.06015 19.6872 7.17071 20H6C5.44772 20 5 19.5523 5 19V12C5 11.4477 5.44772 11 6 11H7Z"
-                                                      fill="currentColor"></path>
+                                                <path
+                                                    fillRule="evenodd" clipRule="evenodd"
+                                                    d="M12.1318 2.50389C12.3321 2.15338 12.7235 1.95768 13.124 2.00775L13.5778 2.06447C16.0449 2.37286 17.636 4.83353 16.9048 7.20993L16.354 8.99999H17.0722C19.7097 8.99999 21.6253 11.5079 20.9313 14.0525L19.5677 19.0525C19.0931 20.7927 17.5124 22 15.7086 22H6C4.34315 22 3 20.6568 3 19V12C3 10.3431 4.34315 8.99999 6 8.99999H8C8.25952 8.99999 8.49914 8.86094 8.6279 8.63561L12.1318 2.50389ZM10 20H15.7086C16.6105 20 17.4008 19.3964 17.6381 18.5262L19.0018 13.5262C19.3488 12.2539 18.391 11 17.0722 11H15C14.6827 11 14.3841 10.8494 14.1956 10.5941C14.0071 10.3388 13.9509 10.0092 14.0442 9.70591L14.9932 6.62175C15.3384 5.49984 14.6484 4.34036 13.5319 4.08468L10.3644 9.62789C10.0522 10.1742 9.56691 10.5859 9 10.8098V19C9 19.5523 9.44772 20 10 20ZM7 11V19C7 19.3506 7.06015 19.6872 7.17071 20H6C5.44772 20 5 19.5523 5 19V12C5 11.4477 5.44772 11 6 11H7Z"
+                                                    fill="currentColor"/>
                                             </svg>
                                         </button>
                                     )}
@@ -624,11 +634,15 @@ const ChatPage: React.FC = () => {
                                             data-testid="bad-response-turn-action-button"
                                             disabled
                                         >
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                                 xmlns="http://www.w3.org/2000/svg" className="icon-sm-heavy">
-                                                <path fillRule="evenodd" clipRule="evenodd"
-                                                      d="M11.8727 21.4961C11.6725 21.8466 11.2811 22.0423 10.8805 21.9922L10.4267 21.9355C7.95958 21.6271 6.36855 19.1665 7.09975 16.7901L7.65054 15H6.93226C4.29476 15 2.37923 12.4921 3.0732 9.94753L4.43684 4.94753C4.91145 3.20728 6.49209 2 8.29589 2H18.0045C19.6614 2 21.0045 3.34315 21.0045 5V12C21.0045 13.6569 19.6614 15 18.0045 15H16.0045C15.745 15 15.5054 15.1391 15.3766 15.3644L11.8727 21.4961ZM14.0045 4H8.29589C7.39399 4 6.60367 4.60364 6.36637 5.47376L5.00273 10.4738C4.65574 11.746 5.61351 13 6.93226 13H9.00451C9.32185 13 9.62036 13.1506 9.8089 13.4059C9.99743 13.6612 10.0536 13.9908 9.96028 14.2941L9.01131 17.3782C8.6661 18.5002 9.35608 19.6596 10.4726 19.9153L13.6401 14.3721C13.9523 13.8258 14.4376 13.4141 15.0045 13.1902V5C15.0045 4.44772 14.5568 4 14.0045 4ZM17.0045 13V5C17.0045 4.64937 16.9444 4.31278 16.8338 4H18.0045C18.5568 4 19.0045 4.44772 19.0045 5V12C19.0045 12.5523 18.5568 13 18.0045 13H17.0045Z"
-                                                      fill="currentColor"></path>
+                                            <svg
+                                                width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg" className="icon-sm-heavy"
+                                            >
+                                                <path
+                                                    fillRule="evenodd" clipRule="evenodd"
+                                                    d="M11.8727 21.4961C11.6725 21.8466 11.2811 22.0423 10.8805 21.9922L10.4267 21.9355C7.95958 21.6271 6.36855 19.1665 7.09975 16.7901L7.65054 15H6.93226C4.29476 15 2.37923 12.4921 3.0732 9.94753L4.43684 4.94753C4.91145 3.20728 6.49209 2 8.29589 2H18.0045C19.6614 2 21.0045 3.34315 21.0045 5V12C21.0045 13.6569 19.6614 15 18.0045 15H16.0045C15.745 15 15.5054 15.1391 15.3766 15.3644L11.8727 21.4961ZM14.0045 4H8.29589C7.39399 4 6.60367 4.60364 6.36637 5.47376L5.00273 10.4738C4.65574 11.746 5.61351 13 6.93226 13H9.00451C9.32185 13 9.62036 13.1506 9.8089 13.4059C9.99743 13.6612 10.0536 13.9908 9.96028 14.2941L9.01131 17.3782C8.6661 18.5002 9.35608 19.6596 10.4726 19.9153L13.6401 14.3721C13.9523 13.8258 14.4376 13.4141 15.0045 13.1902V5C15.0045 4.44772 14.5568 4 14.0045 4ZM17.0045 13V5C17.0045 4.64937 16.9444 4.31278 16.8338 4H18.0045C18.5568 4 19.0045 4.44772 19.0045 5V12C19.0045 12.5523 18.5568 13 18.0045 13H17.0045Z"
+                                                    fill="currentColor"
+                                                />
                                             </svg>
                                         </button>
                                     )}
@@ -656,7 +670,10 @@ const ChatPage: React.FC = () => {
                     )}
 
                     <div
-                        className={`input-area flex flex-nowrap items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-3 w-full ${isBotResponding ? "opacity-50" : ""}`}>
+                        className={`input-area flex flex-nowrap items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-3 w-full ${
+                            isBotResponding ? "opacity-50" : ""
+                        }`}
+                    >
                         <input
                             ref={inputRef}
                             type="text"
@@ -685,7 +702,7 @@ const ChatPage: React.FC = () => {
                 </div>
 
                 <div className="mt-2 text-center text-gray-600 dark:text-gray-600 text-xs">
-                    <span dangerouslySetInnerHTML={{__html: disclaimer}}/>
+                    <span dangerouslySetInnerHTML={{ __html: disclaimer }}/>
                 </div>
             </div>
         </div>
