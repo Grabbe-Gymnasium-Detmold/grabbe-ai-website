@@ -8,12 +8,10 @@ import "highlight.js/styles/github-dark.min.css";
 import Markdown from "react-markdown";
 import {BlueLink} from "@/components/BlueLink.tsx";
 import rehypeSemanticBlockquotes from "rehype-semantic-blockquotes";
-// Entferne die alten Icons, da wir sie nicht mehr benötigen
-// import { FaThumbsDown, FaThumbsUp } from "react-icons/fa";
 import {useToast} from "@/components/Toast.tsx";
 import {useTranslation} from "react-i18next";
 import twemoji from 'twemoji';
-import {MdArrowDropDown, MdCheck} from "react-icons/md"; // Korrigierter Import
+import {MdArrowDropDown, MdCheck} from "react-icons/md";
 
 const API_URL = "https://api.grabbe.site/chat";
 const AUTH_URL = "https://api.grabbe.site/auth";
@@ -21,6 +19,9 @@ const THREAD_URL = "https://api.grabbe.site/thread/create";
 const EXAMPLE_QUESTION_URL = "https://api.grabbe.site/examples";
 const CHECK_TOKEN_URL = "https://api.grabbe.site/auth/check";
 const EVALUATION_URL = "https://api.grabbe.site/evaluation";
+
+// Neu: Dein Vorschlags-Endpoint
+const SUGGESTION_URL = "https://api.grabbe.site/suggestions";
 
 const ChatPage: React.FC = () => {
     const [messages, setMessages] = useState<{
@@ -39,6 +40,11 @@ const ChatPage: React.FC = () => {
     const [isDarkMode, setIsDarkMode] = useState<boolean>(localStorage.getItem("theme") === "dark");
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [disclaimer, setDisclaimer] = useState("");
+
+    // NEU: States für das Vorschlags-Popup
+    const [showSuggestionModal, setShowSuggestionModal] = useState(false);
+    const [suggestionQuestion, setSuggestionQuestion] = useState("");
+    const [suggestionAnswer, setSuggestionAnswer] = useState("");
 
     const {addToast} = useToast();
     const emojiContainerRef = useRef(null);
@@ -66,7 +72,7 @@ const ChatPage: React.FC = () => {
 
     useEffect(() => {
         updateDisclaimer();
-    }, [i18n.language]); // i18n.language ändert sich bei Sprachwechsel
+    }, [i18n.language]);
 
     const languages = [
         {code: "ar", name: "Arabic", flag: "🇸🇦"},
@@ -140,8 +146,8 @@ const ChatPage: React.FC = () => {
 
                 // Überprüfen, ob der Cache invalidiert werden soll
                 if (reloadCounter >= 4) {
-                    localStorage.removeItem(cacheKey); // Cache invalidieren
-                    localStorage.setItem(reloadCounterKey, "1"); // Zählerstand zurücksetzen
+                    localStorage.removeItem(cacheKey);
+                    localStorage.setItem(reloadCounterKey, "1");
                 }
 
                 const cachedQuestions = localStorage.getItem(cacheKey);
@@ -165,7 +171,6 @@ const ChatPage: React.FC = () => {
                     setExampleQuestions(shuffleAndSlice(questions[currentLanguage], 4));
                 }
 
-                // Zählerstand erhöhen und speichern
                 localStorage.setItem(reloadCounterKey, (reloadCounter + 1).toString());
             } catch (error) {
                 console.error(error);
@@ -180,14 +185,10 @@ const ChatPage: React.FC = () => {
 
     useEffect(() => {
         const query = window.matchMedia('(prefers-color-scheme: dark)');
-
         setIsDarkMode(query.matches);
-
         query.addEventListener('change', (event) => setIsDarkMode(event.matches));
         document.documentElement.classList.toggle("dark", isDarkMode);
-
     }, []);
-
 
     const shuffleAndSlice = (array: string[], count: number): string[] => {
         const shuffled = array.sort(() => 0.5 - Math.random());
@@ -245,7 +246,9 @@ const ChatPage: React.FC = () => {
                 const {value, done: readerDone} = await reader.read();
                 done = readerDone;
                 const chunk = decoder.decode(value, {stream: true});
+
                 if (chunk.startsWith('{"done":true,')) {
+                    // Falls das Backend dir das finale JSON schickt: {"done":true, "messageId": ...}
                     const {messageId} = JSON.parse(chunk);
                     setMessages(prev => prev.map(msg => msg.id === botMessageId ? {...msg, id: messageId} : msg));
                 } else {
@@ -255,16 +258,17 @@ const ChatPage: React.FC = () => {
                         text: botMessageText
                     } : msg));
                 }
-
             }
-
         } catch (error: unknown) {
-            setMessages(prev => [...prev, {
-                id: Date.now(),
-                text: error instanceof Error ? `Error: ${error.message}` : "Unknown error occurred.",
-                user: "Bot" as const,
-                evaluation: "null"
-            }]);
+            setMessages(prev => [
+                ...prev,
+                {
+                    id: Date.now(),
+                    text: error instanceof Error ? `Error: ${error.message}` : "Unknown error occurred.",
+                    user: "Bot" as const,
+                    evaluation: "null",
+                },
+            ]);
         } finally {
             setIsBotResponding(false);
         }
@@ -293,7 +297,6 @@ const ChatPage: React.FC = () => {
                 setErrorMessage("Die Erstellung eines neuen Chats ist fehlgeschlagen. Bitte versuche es später erneut.");
                 return null;
             }
-
             const threadData = await threadResponse.json();
             return threadData.threadId;
         } catch (error) {
@@ -305,6 +308,7 @@ const ChatPage: React.FC = () => {
     const handleEvaluation = async (messageId: number, evaluation: "positive" | "negative") => {
         if (!threadId || !token) return;
         setMessages(prev => prev.map(msg => msg.id === messageId ? {...msg, evaluation} : msg));
+
         try {
             const response = await fetch(EVALUATION_URL, {
                 method: "POST",
@@ -341,17 +345,74 @@ const ChatPage: React.FC = () => {
                 setIsDropdownOpen(false);
             }
         };
-
         document.addEventListener("mousedown", handleClickOutside);
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [dropdownRef]);
 
+    // NEU: Funktion, um den Vorschlag tatsächlich an dein Backend zu senden
+    const handleSuggestionSubmit = async () => {
+        // Kurze Prüfung, ob ggf. question ausgefüllt ist
+        if (!suggestionQuestion.trim()) {
+            addToast("Bitte eine Frage eingeben!", "error", 3);
+            return;
+        }
+
+        try {
+            // Auth-Token vorhanden?
+            if (!token) {
+                throw new Error("Keine gültige Session. Bitte neu laden.");
+            }
+
+            const response = await fetch(SUGGESTION_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`, // falls dein Backend es verlangt
+                },
+                body: JSON.stringify({
+                    question: suggestionQuestion,
+                    answer: suggestionAnswer || "",
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || "Fehler beim Senden der Frage.");
+            }
+
+            addToast("Vielen Dank für deinen Vorschlag!", "success", 5);
+            setShowSuggestionModal(false);
+
+            // Felder zurücksetzen
+            setSuggestionQuestion("");
+            setSuggestionAnswer("");
+        } catch (error: any) {
+            console.error(error);
+            addToast(`Fehler beim Senden deines Vorschlags: ${error.message}`, "error", 5);
+        }
+    };
+
     return (
         <div className="bg-white text-gray-800 flex justify-center items-center min-h-screen dark:bg-gray-800 relative">
+            {/* Button oben links für "Frage vorschlagen" */}
+            <div className="absolute top-4 left-4 z-50">
+                <button
+                    onClick={() => setShowSuggestionModal(true)}
+                    className="border border-gray-300 dark:border-gray-600 rounded-full py-2 px-4 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-100
+      dark:hover:bg-gray-700
+      transition-colors
+      text-sm
+      focus:outline-none
+    "
+                >
+                    Frage vorschlagen
+                </button>
+            </div>
 
-            {/* Beginn des neuen Language Dropdowns */}
+
+            {/* Language Dropdown */}
             <div className="absolute top-4 right-4 z-50" ref={dropdownRef}>
                 <div className="relative">
                     <button
@@ -364,7 +425,7 @@ const ChatPage: React.FC = () => {
                         <span className="inline-block mr-2 text-xl">
                             {languages.find(lang => lang.code === i18n.language)?.flag || "🌐"}
                         </span>
-                        <MdArrowDropDown className="text-xl"/> {/* Korrigiertes Icon */}
+                        <MdArrowDropDown className="text-xl"/>
                     </button>
                     {isDropdownOpen && (
                         <div
@@ -391,7 +452,7 @@ const ChatPage: React.FC = () => {
                                                 <span className="inline-block">{lang.name}</span>
                                                 {lang.code === i18n.language && (
                                                     <span className="ml-auto">
-                                                        <MdCheck className="text-lg"/> {/* Korrigiertes Icon */}
+                                                        <MdCheck className="text-lg"/>
                                                     </span>
                                                 )}
                                             </button>
@@ -403,7 +464,96 @@ const ChatPage: React.FC = () => {
                     )}
                 </div>
             </div>
-            {/* Ende des neuen Language Dropdowns */}
+
+            {/* Modal für Vorschlags-Formular */}
+            {showSuggestionModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl max-w-md w-full relative mx-2">
+                        {/* Schließen-Button (Kreuz) */}
+                        <button
+                            onClick={() => setShowSuggestionModal(false)}
+                            aria-label="Close"
+                            className="
+          absolute
+          top-2
+          right-2
+          text-2xl
+          text-gray-600
+          dark:text-gray-300
+          hover:opacity-80
+          focus:outline-none
+        "
+                        >
+                            ×
+                        </button>
+
+                        <h2 className="text-xl font-semibold mb-4 text-center text-gray-900 dark:text-white">
+                            Frage vorschlagen
+                        </h2>
+                        <p className="text-center text-sm mb-6 text-gray-700 dark:text-gray-200">
+                            Du möchtest eine Frage vorschlagen, auf die GrabbeAI bisher keine Antwort weiß?
+                        </p>
+
+                        {/* FRAGE-Input */}
+                        <div className="mb-6">
+                            <label
+                                htmlFor="question-input"
+                                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                            >
+                                Frage
+                            </label>
+                            <input
+                                type="text"
+                                id="question-input"
+                                placeholder="Wo ist Frau Faude abgeblieben?"
+                                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                value={suggestionQuestion}
+                                onChange={(e) => setSuggestionQuestion(e.target.value)}
+                            />
+                        </div>
+
+                        {/* ANTWORT-Input (optional) */}
+                        <div className="mb-6">
+                            <label
+                                htmlFor="answer-input"
+                                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                            >
+                                Antwort (optional)
+                            </label>
+                            <input
+                                type="text"
+                                id="answer-input"
+                                placeholder="Frau Faude ging im Herbst 2024 in den Ruhestand."
+                                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                value={suggestionAnswer}
+                                onChange={(e) => setSuggestionAnswer(e.target.value)}
+                            />
+                        </div>
+
+                        {/* Senden-Button */}
+                        <div className="flex justify-end">
+                            <button
+                                onClick={handleSuggestionSubmit}
+                                className="
+            bg-black
+            hover:bg-gray-900
+            text-white
+            px-4
+            py-2
+            rounded-full
+            transition-colors
+            focus:outline-none
+          "
+                            >
+                                Senden
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
+
 
             <div
                 className="bg-white text-gray-800 dark:bg-gray-800 dark:text-white w-full max-w-xl p-10 flex flex-col items-center">
@@ -472,61 +622,74 @@ const ChatPage: React.FC = () => {
                                         <>
                                             {/* Daumen Hoch Button */}
                                             <button
-                                                className="rounded-full text-gray-800 hover:bg-gray-200 p-1" // Geändert
+                                                className="rounded-full text-gray-800 hover:bg-gray-200 p-1"
                                                 aria-label="Good response"
                                                 data-testid="good-response-turn-action-button"
                                                 onClick={() => handleEvaluation(msg.id, "positive")}
                                             >
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                                     xmlns="http://www.w3.org/2000/svg" className="icon-sm-heavy">
-                                                    <path fillRule="evenodd" clipRule="evenodd"
-                                                          d="M12.1318 2.50389C12.3321 2.15338 12.7235 1.95768 13.124 2.00775L13.5778 2.06447C16.0449 2.37286 17.636 4.83353 16.9048 7.20993L16.354 8.99999H17.0722C19.7097 8.99999 21.6253 11.5079 20.9313 14.0525L19.5677 19.0525C19.0931 20.7927 17.5124 22 15.7086 22H6C4.34315 22 3 20.6568 3 19V12C3 10.3431 4.34315 8.99999 6 8.99999H8C8.25952 8.99999 8.49914 8.86094 8.6279 8.63561L12.1318 2.50389ZM10 20H15.7086C16.6105 20 17.4008 19.3964 17.6381 18.5262L19.0018 13.5262C19.3488 12.2539 18.391 11 17.0722 11H15C14.6827 11 14.3841 10.8494 14.1956 10.5941C14.0071 10.3388 13.9509 10.0092 14.0442 9.70591L14.9932 6.62175C15.3384 5.49984 14.6484 4.34036 13.5319 4.08468L10.3644 9.62789C10.0522 10.1742 9.56691 10.5859 9 10.8098V19C9 19.5523 9.44772 20 10 20ZM7 11V19C7 19.3506 7.06015 19.6872 7.17071 20H6C5.44772 20 5 19.5523 5 19V12C5 11.4477 5.44772 11 6 11H7Z"
-                                                          fill="currentColor"></path>
+                                                <svg
+                                                    width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                    xmlns="http://www.w3.org/2000/svg" className="icon-sm-heavy"
+                                                >
+                                                    <path
+                                                        fillRule="evenodd" clipRule="evenodd"
+                                                        d="M12.1318 2.50389C12.3321 2.15338 12.7235 1.95768 13.124 2.00775L13.5778 2.06447C16.0449 2.37286 17.636 4.83353 16.9048 7.20993L16.354 8.99999H17.0722C19.7097 8.99999 21.6253 11.5079 20.9313 14.0525L19.5677 19.0525C19.0931 20.7927 17.5124 22 15.7086 22H6C4.34315 22 3 20.6568 3 19V12C3 10.3431 4.34315 8.99999 6 8.99999H8C8.25952 8.99999 8.49914 8.86094 8.6279 8.63561L12.1318 2.50389ZM10 20H15.7086C16.6105 20 17.4008 19.3964 17.6381 18.5262L19.0018 13.5262C19.3488 12.2539 18.391 11 17.0722 11H15C14.6827 11 14.3841 10.8494 14.1956 10.5941C14.0071 10.3388 13.9509 10.0092 14.0442 9.70591L14.9932 6.62175C15.3384 5.49984 14.6484 4.34036 13.5319 4.08468L10.3644 9.62789C10.0522 10.1742 9.56691 10.5859 9 10.8098V19C9 19.5523 9.44772 20 10 20ZM7 11V19C7 19.3506 7.06015 19.6872 7.17071 20H6C5.44772 20 5 19.5523 5 19V12C5 11.4477 5.44772 11 6 11H7Z"
+                                                        fill="currentColor"
+                                                    />
                                                 </svg>
                                             </button>
                                             {/* Daumen Runter Button */}
                                             <button
-                                                className="rounded-full text-gray-800 hover:bg-gray-200 p-1" // Geändert
+                                                className="rounded-full text-gray-800 hover:bg-gray-200 p-1"
                                                 aria-label="Bad response"
                                                 data-testid="bad-response-turn-action-button"
                                                 onClick={() => handleEvaluation(msg.id, "negative")}
                                             >
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                                     xmlns="http://www.w3.org/2000/svg" className="icon-sm-heavy">
-                                                    <path fillRule="evenodd" clipRule="evenodd"
-                                                          d="M11.8727 21.4961C11.6725 21.8466 11.2811 22.0423 10.8805 21.9922L10.4267 21.9355C7.95958 21.6271 6.36855 19.1665 7.09975 16.7901L7.65054 15H6.93226C4.29476 15 2.37923 12.4921 3.0732 9.94753L4.43684 4.94753C4.91145 3.20728 6.49209 2 8.29589 2H18.0045C19.6614 2 21.0045 3.34315 21.0045 5V12C21.0045 13.6569 19.6614 15 18.0045 15H16.0045C15.745 15 15.5054 15.1391 15.3766 15.3644L11.8727 21.4961ZM14.0045 4H8.29589C7.39399 4 6.60367 4.60364 6.36637 5.47376L5.00273 10.4738C4.65574 11.746 5.61351 13 6.93226 13H9.00451C9.32185 13 9.62036 13.1506 9.8089 13.4059C9.99743 13.6612 10.0536 13.9908 9.96028 14.2941L9.01131 17.3782C8.6661 18.5002 9.35608 19.6596 10.4726 19.9153L13.6401 14.3721C13.9523 13.8258 14.4376 13.4141 15.0045 13.1902V5C15.0045 4.44772 14.5568 4 14.0045 4ZM17.0045 13V5C17.0045 4.64937 16.9444 4.31278 16.8338 4H18.0045C18.5568 4 19.0045 4.44772 19.0045 5V12C19.0045 12.5523 18.5568 13 18.0045 13H17.0045Z"
-                                                          fill="currentColor"></path>
+                                                <svg
+                                                    width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                    xmlns="http://www.w3.org/2000/svg" className="icon-sm-heavy"
+                                                >
+                                                    <path
+                                                        fillRule="evenodd" clipRule="evenodd"
+                                                        d="M11.8727 21.4961C11.6725 21.8466 11.2811 22.0423 10.8805 21.9922L10.4267 21.9355C7.95958 21.6271 6.36855 19.1665 7.09975 16.7901L7.65054 15H6.93226C4.29476 15 2.37923 12.4921 3.0732 9.94753L4.43684 4.94753C4.91145 3.20728 6.49209 2 8.29589 2H18.0045C19.6614 2 21.0045 3.34315 21.0045 5V12C21.0045 13.6569 19.6614 15 18.0045 15H16.0045C15.745 15 15.5054 15.1391 15.3766 15.3644L11.8727 21.4961ZM14.0045 4H8.29589C7.39399 4 6.60367 4.60364 6.36637 5.47376L5.00273 10.4738C4.65574 11.746 5.61351 13 6.93226 13H9.00451C9.32185 13 9.62036 13.1506 9.8089 13.4059C9.99743 13.6612 10.0536 13.9908 9.96028 14.2941L9.01131 17.3782C8.6661 18.5002 9.35608 19.6596 10.4726 19.9153L13.6401 14.3721C13.9523 13.8258 14.4376 13.4141 15.0045 13.1902V5C15.0045 4.44772 14.5568 4 14.0045 4ZM17.0045 13V5C17.0045 4.64937 16.9444 4.31278 16.8338 4H18.0045C18.5568 4 19.0045 4.44772 19.0045 5V12C19.0045 12.5523 18.5568 13 18.0045 13H17.0045Z"
+                                                        fill="currentColor"
+                                                    />
                                                 </svg>
                                             </button>
                                         </>
                                     )}
                                     {msg.evaluation === "positive" && (
                                         <button
-                                            className="rounded-full text-gray-800 cursor-default p-1" // Geändert
+                                            className="rounded-full text-gray-800 cursor-default p-1"
                                             aria-label="Good response"
                                             data-testid="good-response-turn-action-button"
                                             disabled
                                         >
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                                                  xmlns="http://www.w3.org/2000/svg" className="icon-sm-heavy">
-                                                <path fillRule="evenodd" clipRule="evenodd"
-                                                      d="M12.1318 2.50389C12.3321 2.15338 12.7235 1.95768 13.124 2.00775L13.5778 2.06447C16.0449 2.37286 17.636 4.83353 16.9048 7.20993L16.354 8.99999H17.0722C19.7097 8.99999 21.6253 11.5079 20.9313 14.0525L19.5677 19.0525C19.0931 20.7927 17.5124 22 15.7086 22H6C4.34315 22 3 20.6568 3 19V12C3 10.3431 4.34315 8.99999 6 8.99999H8C8.25952 8.99999 8.49914 8.86094 8.6279 8.63561L12.1318 2.50389ZM10 20H15.7086C16.6105 20 17.4008 19.3964 17.6381 18.5262L19.0018 13.5262C19.3488 12.2539 18.391 11 17.0722 11H15C14.6827 11 14.3841 10.8494 14.1956 10.5941C14.0071 10.3388 13.9509 10.0092 14.0442 9.70591L14.9932 6.62175C15.3384 5.49984 14.6484 4.34036 13.5319 4.08468L10.3644 9.62789C10.0522 10.1742 9.56691 10.5859 9 10.8098V19C9 19.5523 9.44772 20 10 20ZM7 11V19C7 19.3506 7.06015 19.6872 7.17071 20H6C5.44772 20 5 19.5523 5 19V12C5 11.4477 5.44772 11 6 11H7Z"
-                                                      fill="currentColor"></path>
+                                                <path
+                                                    fillRule="evenodd" clipRule="evenodd"
+                                                    d="M12.1318 2.50389C12.3321 2.15338 12.7235 1.95768 13.124 2.00775L13.5778 2.06447C16.0449 2.37286 17.636 4.83353 16.9048 7.20993L16.354 8.99999H17.0722C19.7097 8.99999 21.6253 11.5079 20.9313 14.0525L19.5677 19.0525C19.0931 20.7927 17.5124 22 15.7086 22H6C4.34315 22 3 20.6568 3 19V12C3 10.3431 4.34315 8.99999 6 8.99999H8C8.25952 8.99999 8.49914 8.86094 8.6279 8.63561L12.1318 2.50389ZM10 20H15.7086C16.6105 20 17.4008 19.3964 17.6381 18.5262L19.0018 13.5262C19.3488 12.2539 18.391 11 17.0722 11H15C14.6827 11 14.3841 10.8494 14.1956 10.5941C14.0071 10.3388 13.9509 10.0092 14.0442 9.70591L14.9932 6.62175C15.3384 5.49984 14.6484 4.34036 13.5319 4.08468L10.3644 9.62789C10.0522 10.1742 9.56691 10.5859 9 10.8098V19C9 19.5523 9.44772 20 10 20ZM7 11V19C7 19.3506 7.06015 19.6872 7.17071 20H6C5.44772 20 5 19.5523 5 19V12C5 11.4477 5.44772 11 6 11H7Z"
+                                                    fill="currentColor"/>
                                             </svg>
                                         </button>
                                     )}
                                     {msg.evaluation === "negative" && (
                                         <button
-                                            className="rounded-full text-gray-800 cursor-default p-1" // Geändert
+                                            className="rounded-full text-gray-800 cursor-default p-1"
                                             aria-label="Bad response"
                                             data-testid="bad-response-turn-action-button"
                                             disabled
                                         >
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                                 xmlns="http://www.w3.org/2000/svg" className="icon-sm-heavy">
-                                                <path fillRule="evenodd" clipRule="evenodd"
-                                                      d="M11.8727 21.4961C11.6725 21.8466 11.2811 22.0423 10.8805 21.9922L10.4267 21.9355C7.95958 21.6271 6.36855 19.1665 7.09975 16.7901L7.65054 15H6.93226C4.29476 15 2.37923 12.4921 3.0732 9.94753L4.43684 4.94753C4.91145 3.20728 6.49209 2 8.29589 2H18.0045C19.6614 2 21.0045 3.34315 21.0045 5V12C21.0045 13.6569 19.6614 15 18.0045 15H16.0045C15.745 15 15.5054 15.1391 15.3766 15.3644L11.8727 21.4961ZM14.0045 4H8.29589C7.39399 4 6.60367 4.60364 6.36637 5.47376L5.00273 10.4738C4.65574 11.746 5.61351 13 6.93226 13H9.00451C9.32185 13 9.62036 13.1506 9.8089 13.4059C9.99743 13.6612 10.0536 13.9908 9.96028 14.2941L9.01131 17.3782C8.6661 18.5002 9.35608 19.6596 10.4726 19.9153L13.6401 14.3721C13.9523 13.8258 14.4376 13.4141 15.0045 13.1902V5C15.0045 4.44772 14.5568 4 14.0045 4ZM17.0045 13V5C17.0045 4.64937 16.9444 4.31278 16.8338 4H18.0045C18.5568 4 19.0045 4.44772 19.0045 5V12C19.0045 12.5523 18.5568 13 18.0045 13H17.0045Z"
-                                                      fill="currentColor"></path>
+                                            <svg
+                                                width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg" className="icon-sm-heavy"
+                                            >
+                                                <path
+                                                    fillRule="evenodd" clipRule="evenodd"
+                                                    d="M11.8727 21.4961C11.6725 21.8466 11.2811 22.0423 10.8805 21.9922L10.4267 21.9355C7.95958 21.6271 6.36855 19.1665 7.09975 16.7901L7.65054 15H6.93226C4.29476 15 2.37923 12.4921 3.0732 9.94753L4.43684 4.94753C4.91145 3.20728 6.49209 2 8.29589 2H18.0045C19.6614 2 21.0045 3.34315 21.0045 5V12C21.0045 13.6569 19.6614 15 18.0045 15H16.0045C15.745 15 15.5054 15.1391 15.3766 15.3644L11.8727 21.4961ZM14.0045 4H8.29589C7.39399 4 6.60367 4.60364 6.36637 5.47376L5.00273 10.4738C4.65574 11.746 5.61351 13 6.93226 13H9.00451C9.32185 13 9.62036 13.1506 9.8089 13.4059C9.99743 13.6612 10.0536 13.9908 9.96028 14.2941L9.01131 17.3782C8.6661 18.5002 9.35608 19.6596 10.4726 19.9153L13.6401 14.3721C13.9523 13.8258 14.4376 13.4141 15.0045 13.1902V5C15.0045 4.44772 14.5568 4 14.0045 4ZM17.0045 13V5C17.0045 4.64937 16.9444 4.31278 16.8338 4H18.0045C18.5568 4 19.0045 4.44772 19.0045 5V12C19.0045 12.5523 18.5568 13 18.0045 13H17.0045Z"
+                                                    fill="currentColor"
+                                                />
                                             </svg>
                                         </button>
                                     )}
@@ -547,14 +710,19 @@ const ChatPage: React.FC = () => {
                         <div className="absolute top-0 left-0 w-full h-full flex justify-center items-center">
                             <div className="flex space-x-2">
                                 <div className="h-2 w-2 rounded-full animate-bounce bg-gray-800 dark:bg-gray-300"></div>
-                                <div className="h-2 w-2 rounded-full animate-bounce bg-gray-800 dark:bg-gray-300 delay-200"></div>
-                                <div className="h-2 w-2 rounded-full animate-bounce bg-gray-800 dark:bg-gray-300 delay-400"></div>
+                                <div
+                                    className="h-2 w-2 rounded-full animate-bounce bg-gray-800 dark:bg-gray-300 delay-200"></div>
+                                <div
+                                    className="h-2 w-2 rounded-full animate-bounce bg-gray-800 dark:bg-gray-300 delay-400"></div>
                             </div>
                         </div>
                     )}
 
                     <div
-                        className={`input-area flex flex-nowrap items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-3 w-full ${isBotResponding ? "opacity-50" : ""}`}>
+                        className={`input-area flex flex-nowrap items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-3 w-full ${
+                            isBotResponding ? "opacity-50" : ""
+                        }`}
+                    >
                         <input
                             ref={inputRef}
                             type="text"
@@ -585,12 +753,9 @@ const ChatPage: React.FC = () => {
                 <div className="mt-2 text-center text-gray-600 dark:text-gray-600 text-xs">
                     <span dangerouslySetInnerHTML={{__html: disclaimer}}/>
                 </div>
-
-
             </div>
         </div>
     );
-
 };
 
 export default ChatPage;
