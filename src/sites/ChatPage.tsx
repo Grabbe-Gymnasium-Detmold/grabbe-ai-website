@@ -469,102 +469,110 @@ const ChatPage: React.FC = () => {
             {showSuggestionModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
                     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl max-w-md w-full relative mx-2">
-                        {/* Close-Button */}
+                        {/* Schließen-Button (Kreuz) */}
                         <button
+                            onClick={() => setShowSuggestionModal(false)}
+                            aria-label="Close"
                             className="
           absolute
           top-2
           right-2
+          text-2xl
           text-gray-600
           dark:text-gray-300
           hover:opacity-80
-          text-2xl
           focus:outline-none
         "
-                            onClick={() => setShowSuggestionModal(false)}
-                            aria-label="Close"
                         >
                             ×
                         </button>
 
-                        <h2 className="text-xl font-semibold mb-4 text-center dark:text-white text-gray-900">
+                        <h2 className="text-xl font-semibold mb-4 text-center text-gray-900 dark:text-white">
                             Frage vorschlagen
                         </h2>
-
                         <p className="text-center text-sm mb-6 text-gray-700 dark:text-gray-200">
                             Du möchtest eine Frage vorschlagen, auf die GrabbeAI bisher keine Antwort weiß?
                         </p>
 
-                        {/* Eingabefelder */}
-                        <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">
-                            Frage
-                        </label>
-                        <textarea
-                            placeholder="Wo ist Frau Faude abgeblieben?"
-                            className="
-          w-full
-          resize-none
-          overflow-y-auto
-          rounded-md
-          px-3
-          py-2
-          text-sm
-          outline-none
-          border
-          border-gray-300
-          dark:border-gray-600
-          bg-white
-          dark:bg-gray-700
-          dark:text-white
-          text-gray-800
-          focus:ring-1
-          focus:ring-gray-400
-          focus:border-gray-400
-          mb-4
-        "
-                            style={{ minHeight: "3rem" }}
-                            value={suggestionQuestion}
-                            onChange={(e) => setSuggestionQuestion(e.target.value)}
-                        />
+                        {/* FRAGE-Input */}
+                        <div className="mb-6">
+                            <label
+                                htmlFor="question-input"
+                                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                            >
+                                Frage
+                            </label>
+                            <input
+                                type="text"
+                                id="question-input"
+                                placeholder="Wo ist Frau Faude abgeblieben?"
+                                className="
+            bg-gray-50
+            border
+            border-gray-300
+            text-gray-900
+            text-sm
+            rounded-lg
+            focus:ring-blue-500
+            focus:border-blue-500
+            block
+            w-full
+            p-2.5
+            dark:bg-gray-700
+            dark:border-gray-600
+            dark:placeholder-gray-400
+            dark:text-white
+            dark:focus:ring-blue-500
+            dark:focus:border-blue-500
+          "
+                                value={suggestionQuestion}
+                                onChange={(e) => setSuggestionQuestion(e.target.value)}
+                            />
+                        </div>
 
-                        <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">
-                            Antwort (optional)
-                        </label>
-                        <textarea
-                            placeholder="Frau Faude ging im Herbst 2024 in den Ruhestand."
-                            className="
-          w-full
-          resize-none
-          overflow-y-auto
-          rounded-md
-          px-3
-          py-2
-          text-sm
-          outline-none
-          border
-          border-gray-300
-          dark:border-gray-600
-          bg-white
-          dark:bg-gray-700
-          dark:text-white
-          text-gray-800
-          focus:ring-1
-          focus:ring-gray-400
-          focus:border-gray-400
-          mb-4
-        "
-                            style={{ minHeight: "3rem" }}
-                            value={suggestionAnswer}
-                            onChange={(e) => setSuggestionAnswer(e.target.value)}
-                        />
+                        {/* ANTWORT-Input (optional) */}
+                        <div className="mb-6">
+                            <label
+                                htmlFor="answer-input"
+                                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                            >
+                                Antwort (optional)
+                            </label>
+                            <input
+                                type="text"
+                                id="answer-input"
+                                placeholder="Frau Faude ging im Herbst 2024 in den Ruhestand."
+                                className="
+            bg-gray-50
+            border
+            border-gray-300
+            text-gray-900
+            text-sm
+            rounded-lg
+            focus:ring-blue-500
+            focus:border-blue-500
+            block
+            w-full
+            p-2.5
+            dark:bg-gray-700
+            dark:border-gray-600
+            dark:placeholder-gray-400
+            dark:text-white
+            dark:focus:ring-blue-500
+            dark:focus:border-blue-500
+          "
+                                value={suggestionAnswer}
+                                onChange={(e) => setSuggestionAnswer(e.target.value)}
+                            />
+                        </div>
 
                         {/* Senden-Button */}
                         <div className="flex justify-end">
                             <button
                                 onClick={handleSuggestionSubmit}
                                 className="
-            bg-gray-500
-            hover:bg-gray-600
+            bg-black
+            hover:bg-gray-900
             text-white
             px-4
             py-2
@@ -579,6 +587,7 @@ const ChatPage: React.FC = () => {
                     </div>
                 </div>
             )}
+
 
 
 
