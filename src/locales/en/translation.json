@@ -25,5 +25,6 @@
   "dark_mode_toggle_label": "Toggle Dark Mode",
   "send_prompt_label": "Send prompt",
   "language": "language",
-  "disclaimer": "GrabbeAI can make mistakes. Review important information. By using GrabbeAI you agree to our {tos} and {privacy}."
+  "disclaimer": "GrabbeAI can make mistakes. Review important information. By using GrabbeAI you agree to our {tos} and {privacy}.",
+  "all_rights_reserved": "All rights reserved."
 }

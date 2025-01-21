@@ -25,5 +25,6 @@
   "dark_mode_toggle_label": "Переключить тёмный режим",
   "send_prompt_label": "Отправить запрос",
   "language": "Язык",
-  "disclaimer": "GrabbeAI может ошибаться. Просмотрите важную информацию. Используя GrabbeAI, вы соглашаетесь с нашими {tos} и {privacy}."
+  "disclaimer": "GrabbeAI может ошибаться. Просмотрите важную информацию. Используя GrabbeAI, вы соглашаетесь с нашими {tos} и {privacy}.",
+  "all_rights_reserved": "Все права защищены."
 }

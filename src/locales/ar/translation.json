@@ -25,5 +25,6 @@
   "dark_mode_toggle_label": "تبديل الوضع الداكن",
   "send_prompt_label": "إرسال الطلب",
   "language": "لغة",
-  "disclaimer": "يمكن لـ GrabbeAI ارتكاب الأخطاء. يُرجى مراجعة المعلومات الهامة. باستخدامك لـ GrabbeAI فإنك توافق على {tos} و{privacy}."
+  "disclaimer": "يمكن لـ GrabbeAI ارتكاب الأخطاء. يُرجى مراجعة المعلومات الهامة. باستخدامك لـ GrabbeAI فإنك توافق على {tos} و{privacy}.",
+  "all_rights_reserved": "جميع الحقوق محفوظة."
 }
