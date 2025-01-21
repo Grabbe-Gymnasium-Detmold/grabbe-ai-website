@@ -754,6 +754,12 @@ const ChatPage: React.FC = () => {
                 <div className="mt-2 text-center text-gray-600 dark:text-gray-600 text-xs">
                     <span dangerouslySetInnerHTML={{__html: disclaimer}}/>
                 </div>
+
+                <div className="mt-6 text-center text-gray-600 dark:text-gray-600 text-xs">
+                    &copy; 2025 Finn Busse & Maximilian von Beck. Alle Rechte vorbehalten.
+                </div>
+
+
             </div>
         </div>
     );
