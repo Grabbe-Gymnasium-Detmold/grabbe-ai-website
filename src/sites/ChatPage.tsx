@@ -506,25 +506,7 @@ const ChatPage: React.FC = () => {
                                 type="text"
                                 id="question-input"
                                 placeholder="Wo ist Frau Faude abgeblieben?"
-                                className="
-            bg-gray-50
-            border
-            border-gray-300
-            text-gray-900
-            text-sm
-            rounded-lg
-            focus:ring-blue-500
-            focus:border-blue-500
-            block
-            w-full
-            p-2.5
-            dark:bg-gray-700
-            dark:border-gray-600
-            dark:placeholder-gray-400
-            dark:text-white
-            dark:focus:ring-blue-500
-            dark:focus:border-blue-500
-          "
+                                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                 value={suggestionQuestion}
                                 onChange={(e) => setSuggestionQuestion(e.target.value)}
                             />
@@ -542,25 +524,7 @@ const ChatPage: React.FC = () => {
                                 type="text"
                                 id="answer-input"
                                 placeholder="Frau Faude ging im Herbst 2024 in den Ruhestand."
-                                className="
-            bg-gray-50
-            border
-            border-gray-300
-            text-gray-900
-            text-sm
-            rounded-lg
-            focus:ring-blue-500
-            focus:border-blue-500
-            block
-            w-full
-            p-2.5
-            dark:bg-gray-700
-            dark:border-gray-600
-            dark:placeholder-gray-400
-            dark:text-white
-            dark:focus:ring-blue-500
-            dark:focus:border-blue-500
-          "
+                                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                 value={suggestionAnswer}
                                 onChange={(e) => setSuggestionAnswer(e.target.value)}
                             />
