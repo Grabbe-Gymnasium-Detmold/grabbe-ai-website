@@ -410,7 +410,7 @@ const ChatPage: React.FC = () => {
     "
                 >
                     {t('suggest_question_title')}<span
-                    className="bg-blue-100 text-blue-800 text-xs font-medium me-1 px-1.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800 ms-1">NEU</span>
+                    className="bg-blue-100 text-blue-800 text-xs font-medium me-1 px-1.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800 ms-1">{t('new')}</span>
                 </button>
             </div>
 
