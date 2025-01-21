@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, {useState, useRef, useEffect, useCallback} from "react";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
@@ -6,14 +6,12 @@ import rehypeHighlight from "rehype-highlight";
 import "katex/dist/katex.css";
 import "highlight.js/styles/github-dark.min.css";
 import Markdown from "react-markdown";
-import { BlueLink } from "@/components/BlueLink.tsx";
+import {BlueLink} from "@/components/BlueLink.tsx";
 import rehypeSemanticBlockquotes from "rehype-semantic-blockquotes";
-// Entferne die alten Icons, da wir sie nicht mehr benötigen
-// import { FaThumbsDown, FaThumbsUp } from "react-icons/fa";
-import { useToast } from "@/components/Toast.tsx";
-import { useTranslation } from "react-i18next";
+import {useToast} from "@/components/Toast.tsx";
+import {useTranslation} from "react-i18next";
 import twemoji from 'twemoji';
-import { MdArrowDropDown, MdCheck } from "react-icons/md"; // Korrigierter Import
+import {MdArrowDropDown, MdCheck} from "react-icons/md";
 
 const API_URL = "https://api.grabbe.site/chat";
 const AUTH_URL = "https://api.grabbe.site/auth";
@@ -21,9 +19,10 @@ const THREAD_URL = "https://api.grabbe.site/thread/create";
 const EXAMPLE_QUESTION_URL = "https://api.grabbe.site/examples";
 const CHECK_TOKEN_URL = "https://api.grabbe.site/auth/check";
 const EVALUATION_URL = "https://api.grabbe.site/evaluation";
+// Hier könntest du z.B. einen SUGGESTION_URL definieren, falls du es an dein Backend senden willst
+// const SUGGESTION_URL = "https://api.grabbe.site/suggestion"; // Beispiel-Endpoint
 
 const ChatPage: React.FC = () => {
-    // Bestehende Zustände
     const [messages, setMessages] = useState<{
         id: number;
         text: string;
@@ -41,13 +40,18 @@ const ChatPage: React.FC = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [disclaimer, setDisclaimer] = useState("");
 
-    const { addToast } = useToast();
+    // NEU: States für das Vorschlags-Popup
+    const [showSuggestionModal, setShowSuggestionModal] = useState(false);
+    const [suggestionQuestion, setSuggestionQuestion] = useState("");
+    const [suggestionAnswer, setSuggestionAnswer] = useState("");
+
+    const {addToast} = useToast();
     const emojiContainerRef = useRef(null);
 
     const inputRef = useRef<HTMLInputElement>(null);
 
     const MAX_CHARACTERS = 150;
-    const { t, i18n } = useTranslation();
+    const {t, i18n} = useTranslation();
     const changeLanguage = (lang: string) => {
         i18n.changeLanguage(lang);
         setIsDropdownOpen(false);
@@ -70,20 +74,20 @@ const ChatPage: React.FC = () => {
     }, [i18n.language]); // i18n.language ändert sich bei Sprachwechsel
 
     const languages = [
-        { code: "ar", name: "Arabic", flag: "🇸🇦" },
-        { code: "de", name: "Deutsch", flag: "🇩🇪" },
-        { code: "en", name: "English", flag: "🇬🇧" },
-        { code: "ru", name: "Русский", flag: "🇷🇺" },
-        { code: "tr", name: "Türkçe", flag: "🇹🇷" },
-        { code: "uk", name: "Українська", flag: "🇺🇦" },
+        {code: "ar", name: "Arabic", flag: "🇸🇦"},
+        {code: "de", name: "Deutsch", flag: "🇩🇪"},
+        {code: "en", name: "English", flag: "🇬🇧"},
+        {code: "ru", name: "Русский", flag: "🇷🇺"},
+        {code: "tr", name: "Türkçe", flag: "🇹🇷"},
+        {code: "uk", name: "Українська", flag: "🇺🇦"},
     ];
 
     const authenticate = useCallback(async () => {
         try {
-            const authResponse = await fetch(AUTH_URL, { method: "GET", headers: { "Content-Type": "application/json" } });
+            const authResponse = await fetch(AUTH_URL, {method: "GET", headers: {"Content-Type": "application/json"}});
             if (!authResponse.ok) throw new Error("Authentication failed.");
 
-            const { token: authToken } = await authResponse.json();
+            const {token: authToken} = await authResponse.json();
             localStorage.setItem("session_token", authToken);
             setToken(authToken);
         } catch (error) {
@@ -133,8 +137,8 @@ const ChatPage: React.FC = () => {
             const currentLanguage = i18n.language; // Aktuelle Sprache ermitteln
 
             try {
-                const cacheKey = `example_questions_${currentLanguage}`;
-                const reloadCounterKey = `reload_counter_${currentLanguage}`;
+                const cacheKey = `example_questions`;
+                const reloadCounterKey = `reload_counter`;
 
                 // Lade den aktuellen Zählerstand aus dem localStorage (Standardwert 0)
                 const reloadCounter = parseInt(localStorage.getItem(reloadCounterKey) || "0", 10);
@@ -149,9 +153,9 @@ const ChatPage: React.FC = () => {
 
                 if (cachedQuestions) {
                     const parsedQuestions = JSON.parse(cachedQuestions);
-                    setExampleQuestions(shuffleAndSlice(parsedQuestions, 4));
+                    setExampleQuestions(shuffleAndSlice(parsedQuestions[currentLanguage], 4));
                 } else {
-                    const qResponse = await fetch(`${EXAMPLE_QUESTION_URL}?lang=${currentLanguage}`, {
+                    const qResponse = await fetch(`${EXAMPLE_QUESTION_URL}`, {
                         method: "GET",
                         headers: {
                             "Content-Type": "application/json",
@@ -161,9 +165,9 @@ const ChatPage: React.FC = () => {
 
                     if (!qResponse.ok) throw new Error("Fetching example questions failed.");
 
-                    const { questions } = await qResponse.json();
+                    const {questions} = await qResponse.json();
                     localStorage.setItem(cacheKey, JSON.stringify(questions));
-                    setExampleQuestions(shuffleAndSlice(questions, 4));
+                    setExampleQuestions(shuffleAndSlice(questions[currentLanguage], 4));
                 }
 
                 // Zählerstand erhöhen und speichern
@@ -184,18 +188,11 @@ const ChatPage: React.FC = () => {
 
         setIsDarkMode(query.matches);
 
-        const handleChange = (event: MediaQueryListEvent) => {
-            setIsDarkMode(event.matches);
-            document.documentElement.classList.toggle("dark", event.matches);
-        };
-
-        query.addEventListener('change', handleChange);
+        query.addEventListener('change', (event) => setIsDarkMode(event.matches));
         document.documentElement.classList.toggle("dark", isDarkMode);
 
-        return () => {
-            query.removeEventListener('change', handleChange);
-        };
-    }, [isDarkMode]);
+    }, []);
+
 
     const shuffleAndSlice = (array: string[], count: number): string[] => {
         const shuffled = array.sort(() => 0.5 - Math.random());
@@ -207,7 +204,7 @@ const ChatPage: React.FC = () => {
 
         setIsBotResponding(true);
         setShowExampleCards(false);
-        const userMessage = { id: Date.now(), text: inputText.trim(), user: "You" as const, evaluation: "null" };
+        const userMessage = {id: Date.now(), text: inputText.trim(), user: "You" as const, evaluation: "null"};
         setMessages(prev => [...prev, userMessage]);
         setInputText("");
 
@@ -228,7 +225,7 @@ const ChatPage: React.FC = () => {
         }
 
         const botMessageId = Date.now() + 1;
-        setMessages(prev => [...prev, { id: botMessageId, text: "", user: "Bot" as const, evaluation: "null" }]);
+        setMessages(prev => [...prev, {id: botMessageId, text: "", user: "Bot" as const, evaluation: "null"}]);
 
         try {
             const response = await fetch(API_URL, {
@@ -238,7 +235,7 @@ const ChatPage: React.FC = () => {
                     Accept: "text/event-stream",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ question: userMessage.text, threadId: currentThreadId }),
+                body: JSON.stringify({question: userMessage.text, threadId: currentThreadId}),
             });
             if (!response.ok) throw new Error("Failed to fetch bot response.");
 
@@ -250,12 +247,12 @@ const ChatPage: React.FC = () => {
             let botMessageText = "";
 
             while (!done) {
-                const { value, done: readerDone } = await reader.read();
+                const {value, done: readerDone} = await reader.read();
                 done = readerDone;
-                const chunk = decoder.decode(value, { stream: true });
+                const chunk = decoder.decode(value, {stream: true});
                 if (chunk.startsWith('{"done":true,')) {
-                    const { messageId } = JSON.parse(chunk);
-                    setMessages(prev => prev.map(msg => msg.id === botMessageId ? { ...msg, id: messageId } : msg));
+                    const {messageId} = JSON.parse(chunk);
+                    setMessages(prev => prev.map(msg => msg.id === botMessageId ? {...msg, id: messageId} : msg));
                 } else {
                     botMessageText += chunk;
                     setMessages(prev => prev.map(msg => msg.id === botMessageId ? {
@@ -312,7 +309,7 @@ const ChatPage: React.FC = () => {
 
     const handleEvaluation = async (messageId: number, evaluation: "positive" | "negative") => {
         if (!threadId || !token) return;
-        setMessages(prev => prev.map(msg => msg.id === messageId ? { ...msg, evaluation } : msg));
+        setMessages(prev => prev.map(msg => msg.id === messageId ? {...msg, evaluation} : msg));
         try {
             const response = await fetch(EVALUATION_URL, {
                 method: "POST",
@@ -320,7 +317,7 @@ const ChatPage: React.FC = () => {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ threadId, messageId, evaluation }),
+                body: JSON.stringify({threadId, messageId, evaluation}),
             });
 
             if (!response.ok) {
@@ -356,61 +353,48 @@ const ChatPage: React.FC = () => {
         };
     }, [dropdownRef]);
 
-    // Neue Zustände für das "Frage vorschlagen"-Popup
-    const [isSuggestQuestionOpen, setIsSuggestQuestionOpen] = useState<boolean>(false);
-    const [suggestQuestion, setSuggestQuestion] = useState<string>("");
-    const [suggestAnswer, setSuggestAnswer] = useState<string>("");
-
-    const handleSuggestSend = async () => {
-        if (!suggestQuestion.trim()) {
-            addToast("Bitte gib eine Frage ein.", "error", 5);
-            return;
-        }
-
-        // Hier die Logik zum Senden der Daten an das Backend einfügen
-        // Beispiel:
-        /*
+    // NEU: Funktion, um den Vorschlag abzuschicken (Backend-Logik anpassen)
+    const handleSuggestionSubmit = async () => {
         try {
-            const response = await fetch("https://api.grabbe.site/suggest", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ question: suggestQuestion, answer: suggestAnswer }),
+            // Hier würdest du deinen Request an dein Backend senden.
+            // z.B.:
+            /*
+            const response = await fetch(SUGGESTION_URL, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                question: suggestionQuestion,
+                answer: suggestionAnswer, // optional
+              }),
             });
 
             if (!response.ok) {
-                throw new Error("Failed to suggest question.");
+              throw new Error("Fehler beim Senden der Frage.");
             }
+            */
+            // Für die Demo einfach nur Toast & schließen:
+            addToast("Vielen Dank für deinen Vorschlag!", "success", 5);
+            setShowSuggestionModal(false);
 
-            addToast("Danke für deinen Vorschlag!", "success", 5);
-            setIsSuggestQuestionOpen(false);
-            setSuggestQuestion("");
-            setSuggestAnswer("");
+            // Felder zurücksetzen
+            setSuggestionQuestion("");
+            setSuggestionAnswer("");
         } catch (error) {
             console.error(error);
-            addToast("Es gab einen Fehler beim Senden deines Vorschlags. Bitte versuche es später erneut.", "error", 5);
+            addToast("Fehler beim Senden deines Vorschlags.", "error", 5);
         }
-        */
-
-        // Placeholder-Logik für die Demonstration
-        console.log("Frage vorgeschlagen:", suggestQuestion);
-        console.log("Antwort (optional):", suggestAnswer);
-        addToast("Danke für deinen Vorschlag!", "success", 5);
-        setIsSuggestQuestionOpen(false);
-        setSuggestQuestion("");
-        setSuggestAnswer("");
     };
 
     return (
         <div className="bg-white text-gray-800 flex justify-center items-center min-h-screen dark:bg-gray-800 relative">
-
-            {/* "Frage vorschlagen"-Button oben links */}
+            {/* Button oben links für "Frage vorschlagen" */}
             <div className="absolute top-4 left-4 z-50">
                 <button
-                    className="bg-blue-500 text-white rounded-full px-4 py-2 shadow-lg hover:bg-blue-600 transition-colors"
-                    onClick={() => setIsSuggestQuestionOpen(true)}
+                    onClick={() => setShowSuggestionModal(true)}
+                    className="bg-white text-gray-500 dark:bg-gray-700 dark:text-white rounded-xl shadow-lg py-2 px-4 focus:outline-none hover:opacity-90 transition-colors"
                 >
                     Frage vorschlagen
                 </button>
@@ -429,7 +413,7 @@ const ChatPage: React.FC = () => {
                         <span className="inline-block mr-2 text-xl">
                             {languages.find(lang => lang.code === i18n.language)?.flag || "🌐"}
                         </span>
-                        <MdArrowDropDown className="text-xl" /> {/* Korrigiertes Icon */}
+                        <MdArrowDropDown className="text-xl"/>
                     </button>
                     {isDropdownOpen && (
                         <div
@@ -456,7 +440,7 @@ const ChatPage: React.FC = () => {
                                                 <span className="inline-block">{lang.name}</span>
                                                 {lang.code === i18n.language && (
                                                     <span className="ml-auto">
-                                                        <MdCheck className="text-lg" /> {/* Korrigiertes Icon */}
+                                                        <MdCheck className="text-lg"/>
                                                     </span>
                                                 )}
                                             </button>
@@ -469,6 +453,59 @@ const ChatPage: React.FC = () => {
                 </div>
             </div>
             {/* Ende des neuen Language Dropdowns */}
+
+            {/* Modal für Vorschlags-Formular */}
+            {showSuggestionModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl max-w-md w-full relative">
+                        {/* Close-Button */}
+                        <button
+                            className="absolute top-2 right-2 text-gray-600 dark:text-gray-300 hover:opacity-80"
+                            onClick={() => setShowSuggestionModal(false)}
+                            aria-label="Close"
+                        >
+                            ×
+                        </button>
+                        <h2 className="text-xl font-semibold mb-4 text-center dark:text-white">
+                            Frage vorschlagen
+                        </h2>
+                        <p className="text-center text-sm mb-6 dark:text-gray-200">
+                            Du möchtest eine Frage vorschlagen, auf die GrabbeAI bisher keine Antwort weiß?
+                        </p>
+
+                        {/* Eingabefelder */}
+                        <label className="block mb-2 text-sm font-medium dark:text-gray-200">
+                            Frage
+                        </label>
+                        <input
+                            type="text"
+                            className="w-full mb-4 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                            value={suggestionQuestion}
+                            onChange={(e) => setSuggestionQuestion(e.target.value)}
+                        />
+
+                        <label className="block mb-2 text-sm font-medium dark:text-gray-200">
+                            Antwort (optional)
+                        </label>
+                        <input
+                            type="text"
+                            className="w-full mb-4 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                            value={suggestionAnswer}
+                            onChange={(e) => setSuggestionAnswer(e.target.value)}
+                        />
+
+                        {/* Senden-Button */}
+                        <div className="flex justify-start">
+                            <button
+                                onClick={handleSuggestionSubmit}
+                                className="bg-green-500 text-white px-4 py-2 rounded-full hover:bg-green-600 transition-colors"
+                            >
+                                Senden
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div
                 className="bg-white text-gray-800 dark:bg-gray-800 dark:text-white w-full max-w-xl p-10 flex flex-col items-center">
@@ -537,7 +574,7 @@ const ChatPage: React.FC = () => {
                                         <>
                                             {/* Daumen Hoch Button */}
                                             <button
-                                                className="rounded-full text-gray-800 hover:bg-gray-200 p-1" // Geändert
+                                                className="rounded-full text-gray-800 hover:bg-gray-200 p-1"
                                                 aria-label="Good response"
                                                 data-testid="good-response-turn-action-button"
                                                 onClick={() => handleEvaluation(msg.id, "positive")}
@@ -551,7 +588,7 @@ const ChatPage: React.FC = () => {
                                             </button>
                                             {/* Daumen Runter Button */}
                                             <button
-                                                className="rounded-full text-gray-800 hover:bg-gray-200 p-1" // Geändert
+                                                className="rounded-full text-gray-800 hover:bg-gray-200 p-1"
                                                 aria-label="Bad response"
                                                 data-testid="bad-response-turn-action-button"
                                                 onClick={() => handleEvaluation(msg.id, "negative")}
@@ -559,7 +596,7 @@ const ChatPage: React.FC = () => {
                                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                                                      xmlns="http://www.w3.org/2000/svg" className="icon-sm-heavy">
                                                     <path fillRule="evenodd" clipRule="evenodd"
-                                                          d="M11.8727 21.4961C11.6725 21.8466 11.2811 22.0423 10.8805 21.9922L10.4267 21.9355C7.95958 21.6271 6.36855 19.1665 7.09975 16.7901L7.65054 15H6.93226C4.29476 15 2.37923 12.4921 3.0732 9.94753L4.43684 4.94753C4.91145 3.20728 6.49209 2 8.29589 2H18.0045C19.6614 2 21.0045 3.34315 21.0045 5V12C21.0045 13.6569 19.6614 15 18.0045 15H16.0045C15.745 15 15.5054 15.1391 15.3766 15.3644C15.3766 15.3644C14.1956 10.5941 14.0071 10.3388 14.1956 10.5941C14.1956 10.5941 14.1956 10.5941 14.1956 10.5941ZM14.0045 4H8.29589C7.39399 4 6.60367 4.60364 6.36637 5.47376L5.00273 10.4738C4.65574 11.746 5.61351 13 6.93226 13H9.00451C9.32185 13 9.62036 13.1506 9.8089 13.4059C9.99743 13.6612 10.0536 13.9908 9.96028 14.2941L9.01131 17.3782C8.6661 18.5002 9.35608 19.6596 10.4726 19.9153L13.6401 14.3721C13.9523 13.8258 14.4376 13.4141 15.0045 13.1902V5C15.0045 4.44772 14.5568 4 14.0045 4ZM17.0045 13V5C17.0045 4.64937 16.9444 4.31278 16.8338 4H18.0045C18.5568 4 19.0045 4.44772 19.0045 5V12C19.0045 12.5523 18.5568 13 18.0045 13H17.0045Z"
+                                                          d="M11.8727 21.4961C11.6725 21.8466 11.2811 22.0423 10.8805 21.9922L10.4267 21.9355C7.95958 21.6271 6.36855 19.1665 7.09975 16.7901L7.65054 15H6.93226C4.29476 15 2.37923 12.4921 3.0732 9.94753L4.43684 4.94753C4.91145 3.20728 6.49209 2 8.29589 2H18.0045C19.6614 2 21.0045 3.34315 21.0045 5V12C21.0045 13.6569 19.6614 15 18.0045 15H16.0045C15.745 15 15.5054 15.1391 15.3766 15.3644L11.8727 21.4961ZM14.0045 4H8.29589C7.39399 4 6.60367 4.60364 6.36637 5.47376L5.00273 10.4738C4.65574 11.746 5.61351 13 6.93226 13H9.00451C9.32185 13 9.62036 13.1506 9.8089 13.4059C9.99743 13.6612 10.0536 13.9908 9.96028 14.2941L9.01131 17.3782C8.6661 18.5002 9.35608 19.6596 10.4726 19.9153L13.6401 14.3721C13.9523 13.8258 14.4376 13.4141 15.0045 13.1902V5C15.0045 4.44772 14.5568 4 14.0045 4ZM17.0045 13V5C17.0045 4.64937 16.9444 4.31278 16.8338 4H18.0045C18.5568 4 19.0045 4.44772 19.0045 5V12C19.0045 12.5523 18.5568 13 18.0045 13H17.0045Z"
                                                           fill="currentColor"></path>
                                                 </svg>
                                             </button>
@@ -567,7 +604,7 @@ const ChatPage: React.FC = () => {
                                     )}
                                     {msg.evaluation === "positive" && (
                                         <button
-                                            className="rounded-full text-gray-800 cursor-default p-1" // Geändert
+                                            className="rounded-full text-gray-800 cursor-default p-1"
                                             aria-label="Good response"
                                             data-testid="good-response-turn-action-button"
                                             disabled
@@ -582,7 +619,7 @@ const ChatPage: React.FC = () => {
                                     )}
                                     {msg.evaluation === "negative" && (
                                         <button
-                                            className="rounded-full text-gray-800 cursor-default p-1" // Geändert
+                                            className="rounded-full text-gray-800 cursor-default p-1"
                                             aria-label="Bad response"
                                             data-testid="bad-response-turn-action-button"
                                             disabled
@@ -590,7 +627,7 @@ const ChatPage: React.FC = () => {
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                                                  xmlns="http://www.w3.org/2000/svg" className="icon-sm-heavy">
                                                 <path fillRule="evenodd" clipRule="evenodd"
-                                                      d="M11.8727 21.4961C11.6725 21.8466 11.2811 22.0423 10.8805 21.9922L10.4267 21.9355C7.95958 21.6271 6.36855 19.1665 7.09975 16.7901L7.65054 15H6.93226C4.29476 15 2.37923 12.4921 3.0732 9.94753L4.43684 4.94753C4.91145 3.20728 6.49209 2 8.29589 2H18.0045C19.6614 2 21.0045 3.34315 21.0045 5V12C21.0045 13.6569 19.6614 15 18.0045 15H16.0045C15.745 15 15.5054 15.1391 15.3766 15.3644C15.3766 15.3644C14.1956 10.5941 14.0071 10.3388 14.1956 10.5941C14.1956 10.5941 14.1956 10.5941 14.1956 10.5941ZM14.0045 4H8.29589C7.39399 4 6.60367 4.60364 6.36637 5.47376L5.00273 10.4738C4.65574 11.746 5.61351 13 6.93226 13H9.00451C9.32185 13 9.62036 13.1506 9.8089 13.4059C9.99743 13.6612 10.0536 13.9908 9.96028 14.2941L9.01131 17.3782C8.6661 18.5002 9.35608 19.6596 10.4726 19.9153L13.6401 14.3721C13.9523 13.8258 14.4376 13.4141 15.0045 13.1902V5C15.0045 4.44772 14.5568 4 14.0045 4ZM17.0045 13V5C17.0045 4.64937 16.9444 4.31278 16.8338 4H18.0045C18.5568 4 19.0045 4.44772 19.0045 5V12C19.0045 12.5523 18.5568 13 18.0045 13H17.0045Z"
+                                                      d="M11.8727 21.4961C11.6725 21.8466 11.2811 22.0423 10.8805 21.9922L10.4267 21.9355C7.95958 21.6271 6.36855 19.1665 7.09975 16.7901L7.65054 15H6.93226C4.29476 15 2.37923 12.4921 3.0732 9.94753L4.43684 4.94753C4.91145 3.20728 6.49209 2 8.29589 2H18.0045C19.6614 2 21.0045 3.34315 21.0045 5V12C21.0045 13.6569 19.6614 15 18.0045 15H16.0045C15.745 15 15.5054 15.1391 15.3766 15.3644L11.8727 21.4961ZM14.0045 4H8.29589C7.39399 4 6.60367 4.60364 6.36637 5.47376L5.00273 10.4738C4.65574 11.746 5.61351 13 6.93226 13H9.00451C9.32185 13 9.62036 13.1506 9.8089 13.4059C9.99743 13.6612 10.0536 13.9908 9.96028 14.2941L9.01131 17.3782C8.6661 18.5002 9.35608 19.6596 10.4726 19.9153L13.6401 14.3721C13.9523 13.8258 14.4376 13.4141 15.0045 13.1902V5C15.0045 4.44772 14.5568 4 14.0045 4ZM17.0045 13V5C17.0045 4.64937 16.9444 4.31278 16.8338 4H18.0045C18.5568 4 19.0045 4.44772 19.0045 5V12C19.0045 12.5523 18.5568 13 18.0045 13H17.0045Z"
                                                       fill="currentColor"></path>
                                             </svg>
                                         </button>
@@ -648,89 +685,11 @@ const ChatPage: React.FC = () => {
                 </div>
 
                 <div className="mt-2 text-center text-gray-600 dark:text-gray-600 text-xs">
-                    <span dangerouslySetInnerHTML={{ __html: disclaimer }} />
+                    <span dangerouslySetInnerHTML={{__html: disclaimer}}/>
                 </div>
             </div>
-
-            {/* "Frage vorschlagen"-Popup */}
-            {isSuggestQuestionOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-60">
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg w-11/12 max-w-md p-6 relative">
-                        {/* Schließen-Button */}
-                        <button
-                            className="absolute top-4 right-4 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-white focus:outline-none"
-                            onClick={() => setIsSuggestQuestionOpen(false)}
-                            aria-label="Schließen"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none"
-                                 viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                      d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                        {/* Titel */}
-                        <h2 className="text-xl font-semibold mb-4 text-center">Frage vorschlagen</h2>
-                        {/* Anweisungstext */}
-                        <p className="text-center mb-6">
-                            Du möchtest eine Frage vorschlagen, auf die GrabbeAI bisher keine Antwort weiß?
-                        </p>
-                        {/* Eingabefelder */}
-                        <div className="flex flex-col gap-4">
-                            <div>
-                                <label htmlFor="suggest-question" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Frage
-                                </label>
-                                <input
-                                    id="suggest-question"
-                                    type="text"
-                                    value={suggestQuestion}
-                                    onChange={(e) => setSuggestQuestion(e.target.value)}
-                                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                                    placeholder="Deine Frage"
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            e.preventDefault();
-                                            handleSuggestSend();
-                                        }
-                                    }}
-                                />
-                            </div>
-                            <div>
-                                <label htmlFor="suggest-answer" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Antwort (optional)
-                                </label>
-                                <input
-                                    id="suggest-answer"
-                                    type="text"
-                                    value={suggestAnswer}
-                                    onChange={(e) => setSuggestAnswer(e.target.value)}
-                                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                                    placeholder="Deine Antwort (optional)"
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            e.preventDefault();
-                                            handleSuggestSend();
-                                        }
-                                    }}
-                                />
-                            </div>
-                        </div>
-                        {/* Senden-Button */}
-                        <div className="flex justify-end mt-6">
-                            <button
-                                className="bg-green-500 text-white px-4 py-2 rounded-full hover:bg-green-600 transition-colors focus:outline-none"
-                                onClick={handleSuggestSend}
-                            >
-                                Senden
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
         </div>
     );
-
 };
 
 export default ChatPage;
