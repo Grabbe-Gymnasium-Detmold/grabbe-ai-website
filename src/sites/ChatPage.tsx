@@ -109,6 +109,7 @@ const ChatPage: React.FC = () => {
             return response.ok;
         } catch (error) {
             console.error(error);
+            setErrorMessage("Es gab ein Problem bei der Anmeldung. Bitte versuche es später noch einmal. Deaktiviere ggf. deine VPN!");
             return false;
         }
     }, [authenticate]);
@@ -167,8 +168,10 @@ const ChatPage: React.FC = () => {
                     if (!qResponse.ok) throw new Error("Fetching example questions failed.");
 
                     const {questions} = await qResponse.json();
-                    localStorage.setItem(cacheKey, JSON.stringify(questions));
-                    setExampleQuestions(shuffleAndSlice(questions[currentLanguage], 4));
+                    if(questions != undefined) {
+                        localStorage.setItem(cacheKey, JSON.stringify(questions));
+                        setExampleQuestions(shuffleAndSlice(questions[currentLanguage], 4));
+                    }
                 }
 
                 localStorage.setItem(reloadCounterKey, (reloadCounter + 1).toString());
