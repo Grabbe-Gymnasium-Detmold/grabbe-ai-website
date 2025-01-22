@@ -22,9 +22,9 @@
   "evaluation_error": "Leider gab es einen Fehler beim Senden der Bewertung. Trotzdem danke!",
   "tos_link": "Nutzungsbedingungen",
   "privacy_link": "Datenschutzerklärung",
-  "dark_mode_toggle_label": "Dark Mode umschalten",
-  "send_prompt_label": "Send prompt",
+  "dark_mode_toggle_label": "Wechsel zum Dark Mode",
+  "send_prompt_label": "Nachricht senden",
   "language": "Sprache",
-  "disclaimer": "GrabbeAI kann Fehler machen. Überprüfe wichtige Informationen. Mit der Nutzung von GrabbeAI stimmen Sie unseren {tos} und der {privacy} zu.",
+  "disclaimer": "GrabbeAI kann Fehler machen. Überprüfe wichtige Informationen. Mit der Nutzung stimmen Sie unseren {tos} und der {privacy} zu.",
   "all_rights_reserved": "Alle Rechte vorbehalten."
 }
