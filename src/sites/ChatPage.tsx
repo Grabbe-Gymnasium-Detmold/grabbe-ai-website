@@ -19,8 +19,6 @@ const THREAD_URL = "https://api.grabbe.site/thread/create";
 const EXAMPLE_QUESTION_URL = "https://api.grabbe.site/examples";
 const CHECK_TOKEN_URL = "https://api.grabbe.site/auth/check";
 const EVALUATION_URL = "https://api.grabbe.site/evaluation";
-
-// Neu: Dein Vorschlags-Endpoint
 const SUGGESTION_URL = "https://api.grabbe.site/suggestions";
 
 const ChatPage: React.FC = () => {
@@ -412,8 +410,7 @@ const ChatPage: React.FC = () => {
       focus:outline-none
     "
                 >
-                    {t('suggest_question_title')}<span
-                    className="bg-blue-100 text-blue-800 text-xs font-medium me-1 px-1.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800 ms-1">{t('new')}</span>
+                    {t('suggest_question_title')}
                 </button>
             </div>
 
