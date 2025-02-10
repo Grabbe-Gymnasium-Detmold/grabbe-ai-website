@@ -9,6 +9,7 @@ import trJSON from '../locales/tr/translation.json';
 import arJSON from '../locales/ar/translation.json';
 
 
+
 i18n
     .use(LanguageDetector) // Erkennt die Sprache des Benutzers
     .use(initReactI18next) // Bindet i18n an react-i18next

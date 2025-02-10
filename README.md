@@ -1,5 +1,5 @@
 # GrabbeAI Frontend Test
-
+--
 
 This repository contains the frontend code for the GrabbeAI project, a web-based application designed to interact with the GrabbeAI backend via a RESTful API. The project is built with React, Vite, and styled using TailwindCSS. 
 
